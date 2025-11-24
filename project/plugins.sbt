@@ -1,0 +1,1 @@
+addSbtPlugin("com.github.sbt" % "junit-interface" % "0.13.3")
