@@ -20,9 +20,18 @@ jobs:
           java-version: '17'
           cache: 'sbt'
 
-      - uses: sbt/setup-sbt@v1
+      - name: Install SBT
+        uses: sbt/setup-sbt@v1
         with:
           sbt-runner-version: 1.11.7
 
       - name: Run tests
         run: sbt test
+
+      - name: Generate test report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Scala test report
+          path: '**/target/test-reports/*.xml'
+          reporter: junit
