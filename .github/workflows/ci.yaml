@@ -27,11 +27,3 @@ jobs:
 
       - name: Run tests
         run: sbt test
-
-      - name: Generate test report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: Scala test report
-          path: '**/target/test-reports/*.xml'
-          reporter: junit
