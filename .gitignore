@@ -1,0 +1,4 @@
+metals.sbt
+.DS_Store
+.idea/
+target/
