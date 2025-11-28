@@ -29,7 +29,7 @@ class SpyTokenCollector extends TokenCollector {
   }
 
   override def inherits(line: Int, position: Int): Unit = {
-    tokens += "IN"
+    tokens += "IH"
   }
 
   override def entry(line: Int, position: Int): Unit = {
