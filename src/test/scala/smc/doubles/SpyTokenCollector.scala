@@ -9,59 +9,45 @@ class SpyTokenCollector extends TokenCollector {
   def getTokens: String = tokens.mkString(", ")
   def clear(): Unit = tokens.clear()
 
-  override def machine(line: Int, position: Int): Unit = {
+  override def machine(line: Int, position: Int): Unit =
     tokens += "MA"
-  }
 
-  override def initial(line: Int, position: Int): Unit = {
+  override def initial(line: Int, position: Int): Unit =
     tokens += "IN"
-  }
 
-  override def state(line: Int, position: Int): Unit = {
+  override def state(line: Int, position: Int): Unit =
     tokens += "ST"
-  }
 
-  override def event(line: Int, position: Int): Unit = {
+  override def event(line: Int, position: Int): Unit =
     tokens += "EV"
-  }
 
-  override def superstate(line: Int, position: Int): Unit = {
+  override def superstate(line: Int, position: Int): Unit =
     tokens += "SU"
-  }
 
-  override def inherits(line: Int, position: Int): Unit = {
+  override def inherits(line: Int, position: Int): Unit =
     tokens += "IH"
-  }
 
-  override def entry(line: Int, position: Int): Unit = {
+  override def entry(line: Int, position: Int): Unit =
     tokens += "EN"
-  }
 
-  override def exit(line: Int, position: Int): Unit = {
+  override def exit(line: Int, position: Int): Unit =
     tokens += "EX"
-  }
 
-  override def arrow(line: Int, position: Int): Unit = {
+  override def arrow(line: Int, position: Int): Unit =
     tokens += "AR"
-  }
 
-  override def openBrace(line: Int, position: Int): Unit = {
+  override def openBrace(line: Int, position: Int): Unit =
     tokens += "OB"
-  }
 
-  override def closeBrace(line: Int, position: Int): Unit = {
+  override def closeBrace(line: Int, position: Int): Unit =
     tokens += "CB"
-  }
 
-  override def dash(line: Int, position: Int): Unit = {
+  override def dash(line: Int, position: Int): Unit =
     tokens += "DA"
-  }
 
-  override def name(line: Int, position: Int, value: String): Unit = {
+  override def name(line: Int, position: Int, value: String): Unit =
     tokens += s"NA-$value"
-  }
 
-  override def error(line: Int, position: Int): Unit = {
+  override def error(line: Int, position: Int): Unit =
     tokens += s"ER-L$line-P$position"
-  }
 }
