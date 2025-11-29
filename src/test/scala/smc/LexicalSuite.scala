@@ -53,11 +53,11 @@ class KeywordLexerSuite extends LexicalSuite {
 }
 
 class SyntaxSugarLexerSuite extends LexicalSuite {
-  test("Lexes nothing for whitespaces") {
+  test("Lexer ignores whitespaces") {
     assertLexed("   ", "")
   }
 
-  test("Lexes nothing for tabs") {
+  test("Lexer ignores tabs") {
     assertLexed(" \t \t  ", "")
   }
 
@@ -95,6 +95,29 @@ class SyntaxSugarLexerSuite extends LexicalSuite {
 
   test("Can lex multiple unquoted names") {
     assertLexed("Hello World", "NA-Hello, NA-World")
+  }
+}
+
+class CommentsLexerSuite extends LexicalSuite {
+  test("Lexer ignores commented text using // syntax") {
+    assertLexed("-> // My comment", "AR")
+  }
+
+  test("Lexer ignores commented text using # syntax") {
+    assertLexed("=> # My comment", "AR")
+  }
+
+  test("Lexer ignores comments on multiple text") {
+    assertLexed("#Hello\n//World\n{//}\n#\n//\n}#TILT", "OB, CB")
+  }
+
+  test("Lexer supports /* ... */ comment syntax") {
+    assertLexed("{ /* $initial hello-world } */ -", "OB, DA")
+  }
+
+  test("Lexer supports /* ... */ comment syntax on multiple lines") {
+    assertLexed("{ /* \n $initial \n hello-world \n } \n */ - \n .",
+      "OB, DA, ER-L6-P2")
   }
 }
 

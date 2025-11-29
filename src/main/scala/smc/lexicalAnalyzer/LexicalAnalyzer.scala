@@ -1,10 +1,12 @@
 package smc.lexicalAnalyzer
 
 class LexicalAnalyzer(collector: TokenCollector) {
+  private var inMultilineComment: Boolean = false
   private var lineNumber: Int = 0
   private var position: Int = 0
 
   def lex(input: String): Unit = {
+    inMultilineComment = false
     lineNumber = 1
 
     input.linesIterator.foreach { line =>
@@ -17,18 +19,50 @@ class LexicalAnalyzer(collector: TokenCollector) {
     position = 0
 
     while (position < line.length) {
-      val success: Boolean = {
-        findWhitespace(line) ||
-        findKeyword(line) ||
-        findSyntaxSugar(line) ||
-        findName(line)
-      }
+      if (!isCurrentlyInMultilineComment(line)) {
+        val success: Boolean = {
+          findWhitespace(line) ||
+          findKeyword(line) ||
+          findSyntaxSugar(line) ||
+          findName(line)
+        }
 
-      if (!success) {
-        collector.error(lineNumber, position + 1)
-        position += 1
+        if (!success) {
+          collector.error(lineNumber, position + 1)
+          position += 1
+        }
       }
     }
+  }
+
+  private def isCurrentlyInMultilineComment(line: String): Boolean =
+    findMultilineCommentStart(line) || findMultilineCommentEnd(line)
+
+  private def findMultilineCommentStart(line: String): Boolean = {
+    if (inMultilineComment)
+      return false
+
+    if (line.startsWith("/*", position)) {
+      inMultilineComment = true
+      position += 2
+      true
+    }
+    else false
+  }
+
+  private def findMultilineCommentEnd(line: String): Boolean = {
+    if (!inMultilineComment)
+      return false
+
+    val idx = line.indexOf("*/", position)
+
+    if (idx == -1) {
+      position = line.length
+    } else {
+      position = idx + 2
+      inMultilineComment = false
+    }
+    true
   }
 
   private def findWhitespace(line: String): Boolean =
