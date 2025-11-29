@@ -17,7 +17,10 @@ class LexicalAnalyzer(collector: TokenCollector) {
     position = 0
 
     while (position < line.length) {
-      val success: Boolean = findKeyword(line)
+      val success: Boolean = {
+        findWhitespace(line) ||
+        findKeyword(line)
+      }
 
       if (!success) {
         collector.error(lineNumber, position + 1)
@@ -26,31 +29,31 @@ class LexicalAnalyzer(collector: TokenCollector) {
     }
   }
 
+  private def findWhitespace(line: String): Boolean =
+    whitePatterns.exists { pattern =>
+      pattern.findPrefixMatchOf(line.substring(position)).exists { m =>
+        position += m.end
+        true
+      }
+    }
+
   private def findKeyword(line: String): Boolean = {
     val rest = line.substring(position)
 
-    keywordPattern.findPrefixMatchOf(rest) match {
-      case Some(m) =>
-        val fullKeyword = m.matched
-        dispatchKeyword(fullKeyword)
-
-      case None =>
-        false
+    keywordPattern.findPrefixMatchOf(rest).exists { m =>
+      val keyword = m.matched
+      dispatchKeyword(keyword)
     }
   }
 
   private def dispatchKeyword(keyword: String): Boolean =
-    keywordHandlers.get(keyword) match {
-      case Some(handler) =>
-        handler(lineNumber, position)
-        position += keyword.length
-        true
-
-      case None =>
-        false
+    keywordHandlers.get(keyword).exists { handlerDispatch =>
+      handlerDispatch(lineNumber, position)
+      position += keyword.length
+      true
     }
 
-  val keywordHandlers: Map[String, (Int, Int) => Unit] = Map(
+  private val keywordHandlers: Map[String, (Int, Int) => Unit] = Map(
     "$machine"    -> collector.machine,
     "$initial"    -> collector.initial,
     "$state"      -> collector.state,
