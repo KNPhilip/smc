@@ -9,3 +9,7 @@ val whitePatterns         = Seq(whitePattern, commentPattern)
 val keywordPattern: Regex = """^\$(\w+)""".r
 
 val syntaxSugarPattern = raw"(\{|\}|=>|->|-)".r
+
+val quotedName:   Regex = "^\"([A-Za-z0-9]+)\"".r
+
+val unquotedName: Regex = "^[A-Za-z0-9]+".r

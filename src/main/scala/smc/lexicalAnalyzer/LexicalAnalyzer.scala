@@ -20,7 +20,8 @@ class LexicalAnalyzer(collector: TokenCollector) {
       val success: Boolean = {
         findWhitespace(line) ||
         findKeyword(line) ||
-        findSyntaxSugar(line)
+        findSyntaxSugar(line) ||
+        findName(line)
       }
 
       if (!success) {
@@ -86,4 +87,27 @@ class LexicalAnalyzer(collector: TokenCollector) {
     "=>" -> collector.arrow,
     "->" -> collector.arrow
   )
+
+  private def findName(line: String): Boolean = {
+    val rest = line.substring(position)
+    findQuotedName(rest) || findUnquotedName(rest)
+  }
+
+  private def findQuotedName(rest: String): Boolean =
+    quotedName.findPrefixMatchOf(rest).exists { m =>
+      val unquotedName = m.matched
+        .stripPrefix("\"")
+        .stripSuffix("\"")
+
+      collector.name(lineNumber, position, unquotedName)
+      position += m.end
+      true
+    }
+
+  private def findUnquotedName(rest: String): Boolean =
+    unquotedName.findPrefixMatchOf(rest).exists { m =>
+      collector.name(lineNumber, position, m.matched)
+      position += m.end
+      true
+    }
 }

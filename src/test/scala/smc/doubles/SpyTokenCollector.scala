@@ -58,10 +58,10 @@ class SpyTokenCollector extends TokenCollector {
   }
 
   override def name(line: Int, position: Int, value: String): Unit = {
-    tokens += "NA"
+    tokens += s"NA-$value"
   }
 
   override def error(line: Int, position: Int): Unit = {
-    tokens += s"ER$line-$position"
+    tokens += s"ER-L$line-P$position"
   }
 }
