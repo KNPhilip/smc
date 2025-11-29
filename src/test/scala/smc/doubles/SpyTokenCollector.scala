@@ -7,6 +7,7 @@ class SpyTokenCollector extends TokenCollector {
   private val tokens = ListBuffer[String]()
 
   def getTokens: String = tokens.mkString(", ")
+  def clear(): Unit = tokens.clear()
 
   override def machine(line: Int, position: Int): Unit = {
     tokens += "MA"
