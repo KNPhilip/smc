@@ -64,6 +64,26 @@ class SyntaxSugarLexerSuite extends LexicalSuite {
   test("Can lex correctly after whitespaces and tabs") {
     assertLexed("  $machine   \t   $state ", "MA, ST")
   }
+
+  test("Can lex opening brace") {
+    assertLexed("{", "OB")
+  }
+
+  test("Can lex closing brace") {
+    assertLexed("}", "CB")
+  }
+
+  test("Can lex a dash") {
+    assertLexed("-", "DA")
+  }
+
+  test("Can lex the arrow syntax") {
+    assertLexed("=>", "AR")
+  }
+
+  test("Can lex alternative arrow syntax") {
+    assertLexed("->", "AR")
+  }
 }
 
 class ErrorLexerSuite extends LexicalSuite {

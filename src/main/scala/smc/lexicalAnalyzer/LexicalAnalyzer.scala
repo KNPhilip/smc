@@ -19,7 +19,8 @@ class LexicalAnalyzer(collector: TokenCollector) {
     while (position < line.length) {
       val success: Boolean = {
         findWhitespace(line) ||
-        findKeyword(line)
+        findKeyword(line) ||
+        findSyntaxSugar(line)
       }
 
       if (!success) {
@@ -62,5 +63,27 @@ class LexicalAnalyzer(collector: TokenCollector) {
     "$inherits"   -> collector.inherits,
     "$entry"      -> collector.entry,
     "$exit"       -> collector.exit
+  )
+
+  private def findSyntaxSugar(line: String): Boolean = {
+    val rest = line.substring(position)
+
+    syntaxSugarPattern.findPrefixMatchOf(rest).exists { m =>
+      val sym = m.matched
+
+      syntaxSugarHandlers.get(sym).foreach { handler =>
+        handler(lineNumber, position)
+      }
+      position += sym.length
+      true
+    }
+  }
+
+  private val syntaxSugarHandlers: Map[String, (Int, Int) => Unit] = Map(
+    "{"  -> collector.openBrace,
+    "}"  -> collector.closeBrace,
+    "-"  -> collector.dash,
+    "=>" -> collector.arrow,
+    "->" -> collector.arrow
   )
 }

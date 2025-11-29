@@ -1,7 +1,7 @@
 package smc.doubles
 
-import smc.lexicalAnalyzer.TokenCollector
 import scala.collection.mutable.ListBuffer
+import smc.lexicalAnalyzer.TokenCollector
 
 class SpyTokenCollector extends TokenCollector {
   private val tokens = ListBuffer[String]()
@@ -41,18 +41,6 @@ class SpyTokenCollector extends TokenCollector {
     tokens += "EX"
   }
 
-  override def singleComment(line: Int, position: Int): Unit = {
-    tokens += "SC"
-  }
-
-  override def openMultiComment(line: Int, position: Int): Unit = {
-    tokens += "OM"
-  }
-
-  override def closeMultiComment(line: Int, position: Int): Unit = {
-    tokens += "CM"
-  }
-
   override def arrow(line: Int, position: Int): Unit = {
     tokens += "AR"
   }
@@ -61,7 +49,7 @@ class SpyTokenCollector extends TokenCollector {
     tokens += "OB"
   }
 
-  override def closedBrace(line: Int, position: Int): Unit = {
+  override def closeBrace(line: Int, position: Int): Unit = {
     tokens += "CB"
   }
 
