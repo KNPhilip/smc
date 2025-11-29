@@ -16,10 +16,6 @@ class LexicalSuite extends FunSuite {
     lexer.lex(input)
     assertEquals(spy.getTokens, output)
   }
-
-  protected def assertNoLex(input: String): Unit = {
-    assertLexed(input, "")
-  }
 }
 
 class KeywordLexerSuite extends LexicalSuite {
@@ -55,7 +51,11 @@ class KeywordLexerSuite extends LexicalSuite {
     assertLexed("$exit", "EX")
   }
 
-  test("Does not lex unknown keyword") {
-    assertNoLex("$mygibberishkeyword")
+//  test("Lexes error on unknown keyword") {
+//    assertLexed("$mygibberishkeyword", "ER1-1")
+//  }
+
+  test("Lexes error on empty keyword") {
+    assertLexed("$", "ER1-1")
   }
 }

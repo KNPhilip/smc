@@ -1,7 +1,5 @@
 package smc.lexicalAnalyzer
 
-import scala.util.matching.Regex
-
 class LexicalAnalyzer(collector: TokenCollector) {
   private var lineNumber: Int = 0
   private var position: Int = 0
@@ -19,11 +17,14 @@ class LexicalAnalyzer(collector: TokenCollector) {
     position = 0
 
     while (position < line.length) {
-      findKeyword(line)
+      val success: Boolean = findKeyword(line)
+
+      if (!success) {
+        collector.error(lineNumber, position + 1)
+        position += 1
+      }
     }
   }
-
-  private val keywordPattern: Regex = """^\$(\w+)""".r
 
   private def findKeyword(line: String): Boolean = {
     val rest = line.substring(position)
@@ -31,30 +32,32 @@ class LexicalAnalyzer(collector: TokenCollector) {
     keywordPattern.findPrefixMatchOf(rest) match {
       case Some(m) =>
         val fullKeyword = m.matched
-        keywords.get(fullKeyword) match {
-          case Some(handler) =>
-            handler(lineNumber, position)
-            position += fullKeyword.length
-            true
-
-          case None =>
-            position += fullKeyword.length
-            false
-        }
+        dispatchKeyword(fullKeyword)
 
       case None =>
         false
     }
   }
 
-  private val keywords: Map[String, (Int, Int) => Unit] = Map(
-    "$machine"   -> collector.machine,
-    "$initial"  -> collector.initial,
-    "$state"   -> collector.state,
-    "$event"  -> collector.event,
-    "$superstate"   -> collector.superstate,
-    "$inherits"  -> collector.inherits,
-    "$entry"        -> collector.entry,
+  private def dispatchKeyword(keyword: String): Boolean =
+    keywordHandlers.get(keyword) match {
+      case Some(handler) =>
+        handler(lineNumber, position)
+        position += keyword.length
+        true
+
+      case None =>
+        false
+    }
+
+  val keywordHandlers: Map[String, (Int, Int) => Unit] = Map(
+    "$machine"    -> collector.machine,
+    "$initial"    -> collector.initial,
+    "$state"      -> collector.state,
+    "$event"      -> collector.event,
+    "$superstate" -> collector.superstate,
+    "$inherits"   -> collector.inherits,
+    "$entry"      -> collector.entry,
     "$exit"       -> collector.exit
   )
 }

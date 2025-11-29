@@ -74,6 +74,6 @@ class SpyTokenCollector extends TokenCollector {
   }
 
   override def error(line: Int, position: Int): Unit = {
-    tokens += "ER"
+    tokens += s"ER$line-$position"
   }
 }
