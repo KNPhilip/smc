@@ -122,7 +122,7 @@ First thing to notice is that the arrow `=>` syntax after the machine declaratio
 Here is an overview of the keywords used in the state machine definition language:
 
 - **$machine** - Declares a state machine with a name.
-- **$initial** - Sets the initial state of the state machine.
+- **$initial** - Declares the target state of the initial pseudostate.
 - **$state** - Defines a state within the state machine.
 - **$event** - Defines an event that triggers a transition from one state to another, optionally specifying actions to be executed during the transition.
 - **$superstate** - Defines a superstate that can contain common events and actions for its substates.
@@ -133,3 +133,45 @@ Here is an overview of the keywords used in the state machine definition languag
 Additional syntax includes `#`, `//`, `/* */`, `=>`, `{}`, and `-` for various purposes as described in the above sections.
 
 Extra whitespace and newlines are _ignored_, so you can format the state machine definitions in a way that is most readable to _you_.
+
+### EBNF
+
+Below you can see a formalized description of the syntax expressed in Extended Backus-Naur Form (EBNF)
+
+```ebnf
+file ::= whitespace* comment* stateMachine whitespace* comment*
+
+stateMachine ::= "$machine" string ( "=>" stateName )? "{" machineItem* "}"
+machineItem  ::= initialState | superstate | state | comment | whitespace
+initialState ::= "$initial" stateName
+
+superstate ::= "$superstate" string "{" superItem* "}"
+superItem  ::= entryAction | exitAction | event | comment | whitespace
+
+state ::= "$state" stateName ( inheritsClause | inheritsArrow )?
+          ( "{" stateItem* "}" | terseTransition )
+
+inheritsClause ::= "$inherits" string
+inheritsArrow  ::= "=>" string
+
+stateItem ::= entryAction | exitAction | event | comment | whitespace
+terseTransition ::= "=>" eventName "=>" destination ( "=>" action )?
+event ::= "$event" eventName "=>" destination ( "=>" action )?
+
+destination ::= stateName | "-"
+entryAction ::= "$entry" action
+exitAction  ::= "$exit" action
+
+action ::= string | "{" string+ "}"
+
+eventName ::= string
+stateName ::= string
+
+string ::= '"' { characterExceptQuote } '"'
+characterExceptQuote ::= ? any character except " or newline ? 
+whitespace ::= { " " | "\t" | "\n" | "\r" }
+
+comment ::= singleLineComment | multiLineComment
+singleLineComment ::= "#" { notNewlineChar } | "//" { notNewlineChar }
+multiLineComment ::= "/*" { anyCharExceptClosingComment } "*/"
+```
