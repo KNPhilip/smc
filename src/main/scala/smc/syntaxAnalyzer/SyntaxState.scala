@@ -17,4 +17,8 @@ enum SyntaxState:
   case ActionDeclaration
   case ActionValue
   case SuperstateValue
+  case SuperstateDeclaration
+  case SubtransitionSpec
+  case EntryValue
+  case ExitValue
   case End

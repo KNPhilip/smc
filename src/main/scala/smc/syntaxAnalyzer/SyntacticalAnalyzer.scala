@@ -75,6 +75,18 @@ class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
     Transition(SyntaxState.ActionValue, SyntaxEvent.Name, SyntaxState.ActionValue, Some(_.addAction())),
     Transition(SyntaxState.ActionValue, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
 
+    Transition(SyntaxState.MachineSpec, SyntaxEvent.Superstate, SyntaxState.SuperstateValue, Some(_.addTransition())),
+    Transition(SyntaxState.SuperstateValue, SyntaxEvent.Name, SyntaxState.SuperstateDeclaration, Some(_.markAsSuperstate())),
+    Transition(SyntaxState.SuperstateDeclaration, SyntaxEvent.OpenBrace, SyntaxState.SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(SyntaxState.EventArrow, SyntaxEvent.OpenBrace, SyntaxState.SubtransitionSpec, Some(_.markAsSubtransition())),
+
+    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Entry, SyntaxState.EntryValue, None),
+    Transition(SyntaxState.EntryValue, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setEntryAction())),
+    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Exit, SyntaxState.ExitValue, None),
+    Transition(SyntaxState.ExitValue, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setExitAction())),
+
+    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
+
     Transition(SyntaxState.MachineSpec, SyntaxEvent.ClosedBrace, SyntaxState.End, Some(_.concludeStateMachine()))
   )
 
