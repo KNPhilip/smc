@@ -51,11 +51,31 @@ class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
 
   private val transitions: List[Transition] = List(
     Transition(SyntaxState.Machine, SyntaxEvent.Machine, SyntaxState.MachineValue, None),
-    Transition(SyntaxState.MachineValue, SyntaxEvent.Name, SyntaxState.MachineNamed, Some(_.newMachine())),
+    Transition(SyntaxState.MachineValue, SyntaxEvent.Name, SyntaxState.MachineNamed, Some(_.addMachine())),
     Transition(SyntaxState.MachineNamed, SyntaxEvent.OpenBrace, SyntaxState.MachineSpec, None),
     Transition(SyntaxState.MachineNamed, SyntaxEvent.Arrow, SyntaxState.InitialArrow, None),
     Transition(SyntaxState.InitialArrow, SyntaxEvent.Name, SyntaxState.InitialArrowNamed, Some(_.setInitialState())),
-    Transition(SyntaxState.InitialArrowNamed, SyntaxEvent.OpenBrace, SyntaxState.MachineSpec, None)
+    Transition(SyntaxState.InitialArrowNamed, SyntaxEvent.OpenBrace, SyntaxState.MachineSpec, None),
+
+    Transition(SyntaxState.MachineSpec, SyntaxEvent.Initial, SyntaxState.InitialValue, None),
+    Transition(SyntaxState.InitialValue, SyntaxEvent.Name, SyntaxState.MachineSpec, Some(_.setInitialState())),
+
+    Transition(SyntaxState.MachineSpec, SyntaxEvent.State, SyntaxState.StateValue, None),
+    Transition(SyntaxState.StateValue, SyntaxEvent.Name, SyntaxState.EventArrow, Some(_.addTransition())),
+    Transition(SyntaxState.EventArrow, SyntaxEvent.Arrow, SyntaxState.EventValue, None),
+    Transition(SyntaxState.EventValue, SyntaxEvent.Name, SyntaxState.NextStateArrow, Some(_.setEvent())),
+    Transition(SyntaxState.NextStateArrow, SyntaxEvent.Arrow, SyntaxState.NextStateValue, None),
+    Transition(SyntaxState.NextStateValue, SyntaxEvent.Dash, SyntaxState.ActionArrow, Some(_.setEmptyNextState())),
+    Transition(SyntaxState.NextStateValue, SyntaxEvent.Name, SyntaxState.ActionArrow, Some(_.setNextState())),
+    Transition(SyntaxState.ActionArrow, SyntaxEvent.ClosedBrace, SyntaxState.End, Some(_.concludeTransition())),
+    Transition(SyntaxState.ActionArrow, SyntaxEvent.Initial, SyntaxState.InitialValue, Some(_.concludeTransition())),
+    Transition(SyntaxState.ActionArrow, SyntaxEvent.Superstate, SyntaxState.SuperstateValue, Some(_.concludeTransition())),
+    Transition(SyntaxState.ActionArrow, SyntaxEvent.Arrow, SyntaxState.ActionDeclaration, None),
+    Transition(SyntaxState.ActionDeclaration, SyntaxEvent.OpenBrace, SyntaxState.ActionValue, None),
+    Transition(SyntaxState.ActionValue, SyntaxEvent.Name, SyntaxState.ActionValue, Some(_.addAction())),
+    Transition(SyntaxState.ActionValue, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
+
+    Transition(SyntaxState.MachineSpec, SyntaxEvent.ClosedBrace, SyntaxState.End, Some(_.concludeStateMachine()))
   )
 
   private def handleEvent(event: SyntaxEvent, line: Int, position: Int): Unit =

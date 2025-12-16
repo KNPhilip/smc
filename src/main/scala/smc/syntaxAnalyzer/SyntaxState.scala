@@ -2,8 +2,19 @@ package smc.syntaxAnalyzer
 
 enum SyntaxState:
   case Machine
+  case MachineValue
   case MachineNamed
   case InitialArrow
   case InitialArrowNamed
   case MachineSpec
-  case MachineValue
+  case InitialValue
+  case StateValue
+  case EventArrow
+  case EventValue
+  case NextStateArrow
+  case NextStateValue
+  case ActionArrow
+  case ActionDeclaration
+  case ActionValue
+  case SuperstateValue
+  case End

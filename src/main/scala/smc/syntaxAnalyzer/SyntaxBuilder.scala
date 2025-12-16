@@ -1,6 +1,13 @@
 package smc.syntaxAnalyzer
 
 trait SyntaxBuilder {
-  def newMachine(): Unit
+  def addMachine(): Unit
   def setInitialState(): Unit
+  def addTransition(): Unit
+  def setEvent(): Unit
+  def setEmptyNextState(): Unit
+  def setNextState(): Unit
+  def addAction(): Unit
+  def concludeTransition(): Unit
+  def concludeStateMachine(): Unit
 }
