@@ -71,6 +71,7 @@ class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
     Transition(SyntaxState.ActionArrow, SyntaxEvent.Initial, SyntaxState.InitialValue, Some(_.concludeTransition())),
     Transition(SyntaxState.ActionArrow, SyntaxEvent.Superstate, SyntaxState.SuperstateValue, Some(_.concludeTransition())),
     Transition(SyntaxState.ActionArrow, SyntaxEvent.Arrow, SyntaxState.ActionDeclaration, None),
+    Transition(SyntaxState.ActionDeclaration, SyntaxEvent.Name, SyntaxState.MachineSpec, Some(_.setActionAndConclude())),
     Transition(SyntaxState.ActionDeclaration, SyntaxEvent.OpenBrace, SyntaxState.ActionValue, None),
     Transition(SyntaxState.ActionValue, SyntaxEvent.Name, SyntaxState.ActionValue, Some(_.addAction())),
     Transition(SyntaxState.ActionValue, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
@@ -85,6 +86,19 @@ class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
     Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Exit, SyntaxState.ExitValue, None),
     Transition(SyntaxState.ExitValue, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setExitAction())),
 
+    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Event, SyntaxState.SubeventValue, None),
+    Transition(SyntaxState.SubeventValue, SyntaxEvent.Name, SyntaxState.SubNextStateArrow, Some(_.setEvent())),
+    Transition(SyntaxState.SubNextStateArrow, SyntaxEvent.Arrow, SyntaxState.SubNextStateValue, None),
+    Transition(SyntaxState.SubNextStateValue, SyntaxEvent.Dash, SyntaxState.SubactionArrow, Some(_.setEmptyNextState())),
+    Transition(SyntaxState.SubNextStateValue, SyntaxEvent.Name, SyntaxState.SubactionArrow, Some(_.setNextState())),
+    Transition(SyntaxState.SubactionArrow, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
+    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Entry, SyntaxState.EntryValue, None),
+    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Exit, SyntaxState.ExitValue, None),
+    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Arrow, SyntaxState.SubactionDeclaration, None),
+    Transition(SyntaxState.SubactionDeclaration, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setActionAndConclude())),
+    Transition(SyntaxState.SubactionDeclaration, SyntaxEvent.OpenBrace, SyntaxState.SubactionValue, None),
+    Transition(SyntaxState.SubactionValue, SyntaxEvent.Name, SyntaxState.SubactionValue, Some(_.addAction())),
+    Transition(SyntaxState.SubactionValue, SyntaxEvent.ClosedBrace, SyntaxState.SubtransitionSpec, None),
     Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
 
     Transition(SyntaxState.MachineSpec, SyntaxEvent.ClosedBrace, SyntaxState.End, Some(_.concludeStateMachine()))

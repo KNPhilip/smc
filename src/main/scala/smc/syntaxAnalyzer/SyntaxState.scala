@@ -21,4 +21,10 @@ enum SyntaxState:
   case SubtransitionSpec
   case EntryValue
   case ExitValue
+  case SubeventValue
+  case SubNextStateArrow
+  case SubNextStateValue
+  case SubactionArrow
+  case SubactionDeclaration
+  case SubactionValue
   case End

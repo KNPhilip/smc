@@ -8,6 +8,7 @@ trait SyntaxBuilder {
   def setEmptyNextState(): Unit
   def setNextState(): Unit
   def addAction(): Unit
+  def setActionAndConclude(): Unit
   def markAsSuperstate(): Unit
   def markAsSubtransition(): Unit
   def setEntryAction(): Unit
