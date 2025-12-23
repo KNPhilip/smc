@@ -1,5 +1,7 @@
 package smc.syntaxAnalyzer
 
+import smc.syntaxAnalyzer.ErrorType.*
+
 final class SyntaxBuilder {
   private val syntax: StateMachineSyntax = new StateMachineSyntax()
   private var machine: StateMachine = null
@@ -8,46 +10,37 @@ final class SyntaxBuilder {
 
   def getStateMachine: StateMachineSyntax = syntax
 
-  def addMachine(): Unit = {
+  def addMachine(): Unit =
     machine = new StateMachine(name)
-  }
 
-  def setInitialState(): Unit = {
+  def setInitialState(): Unit =
     machine.initialState = name
-  }
 
-  def addTransition(): Unit = {
+  def addTransition(): Unit =
     transition = new State(name)
-  }
 
-  def setEvent(): Unit = {
+  def setEvent(): Unit =
     transition.events += new Event(name)
-  }
 
-  def setEmptyNextState(): Unit = {
+  def setEmptyNextState(): Unit =
     transition.events.last.targetState = transition.name
-  }
 
-  def setNextState(): Unit = {
+  def setNextState(): Unit =
     transition.events.last.targetState = name
-  }
 
-  def addAction(): Unit = {
+  def addAction(): Unit =
     transition.events.last.actions += name
-  }
 
   def markAsSuperstate(): Unit = {
     transition.name = name
     transition.isSuperState = true
   }
 
-  def setEntryAction(): Unit = {
+  def setEntryAction(): Unit =
     transition.entryActions += name
-  }
 
-  def setExitAction(): Unit = {
+  def setExitAction(): Unit =
     transition.exitActions += name
-  }
 
   def concludeTransition(): Unit = {
     machine.states += transition
@@ -60,31 +53,24 @@ final class SyntaxBuilder {
     transition = null
   }
 
-  def setName(name: String): Unit = {
+  def setName(name: String): Unit =
     this.name = name
-  }
 
-  def syntaxError(line: Int, position: Int): Unit = {
+  def syntaxError(line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(SyntaxError, "", line, position))
 
-  }
+  def machineError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(MachineError, s"$state|$event", line, position))
 
-  def machineError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit = {
+  def transitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(TransitionError, s"$state|$event", line, position))
 
-  }
+  def subtransitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(SubtransitionError, s"$state|$event", line, position))
 
-  def transitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit = {
+  def superstateError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(SuperstateError, s"$state|$event", line, position))
 
-  }
-
-  def subtransitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit = {
-
-  }
-
-  def superstateError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit = {
-
-  }
-
-  def entryExitError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit = {
-
-  }
+  def entryExitError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(EntryExitError, s"$state|$event", line, position))
 }
