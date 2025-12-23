@@ -6,11 +6,10 @@ final class SyntaxBuilder {
   private var transition: State = null
   private var name: String = null
 
-  def getStateMachine(): StateMachineSyntax = syntax
+  def getStateMachine: StateMachineSyntax = syntax
 
   def addMachine(): Unit = {
-    machine = new StateMachine()
-    machine.name = name
+    machine = new StateMachine(name)
   }
 
   def setInitialState(): Unit = {
@@ -18,13 +17,11 @@ final class SyntaxBuilder {
   }
 
   def addTransition(): Unit = {
-    transition = new State()
-    transition.name = name
+    transition = new State(name)
   }
 
   def setEvent(): Unit = {
-    transition.events += new Event()
-    transition.events.last.name = name
+    transition.events += new Event(name)
   }
 
   def setEmptyNextState(): Unit = {
