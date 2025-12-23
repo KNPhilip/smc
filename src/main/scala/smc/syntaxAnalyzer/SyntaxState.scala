@@ -1,7 +1,7 @@
 package smc.syntaxAnalyzer
 
 enum SyntaxState:
-  case Machine
+  case MachineDeclaration
   case MachineValue
   case MachineNamed
   case InitialArrow

@@ -1,103 +1,105 @@
 package smc.syntaxAnalyzer
 
 import smc.lexicalAnalyzer.TokenCollector
+import smc.syntaxAnalyzer.SyntaxState.*
+import smc.syntaxAnalyzer.SyntaxEvent.*
 
 class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
-  private var state: SyntaxState = SyntaxState.MachineSpec
+  private var state: SyntaxState = MachineSpec
 
   override def machine(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Machine, line, position)
+    handleEvent(Machine, line, position)
 
   override def initial(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Initial, line, position)
+    handleEvent(Initial, line, position)
 
   override def state(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.State, line, position)
+    handleEvent(State, line, position)
 
   override def event(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Event, line, position)
+    handleEvent(Event, line, position)
 
   override def superstate(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Superstate, line, position)
+    handleEvent(Superstate, line, position)
 
   override def inherits(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Inherits, line, position)
+    handleEvent(Inherits, line, position)
 
   override def entry(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Entry, line, position)
+    handleEvent(Entry, line, position)
 
   override def exit(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Exit, line, position)
+    handleEvent(Exit, line, position)
 
   override def arrow(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Arrow, line, position)
+    handleEvent(Arrow, line, position)
 
   override def openBrace(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.OpenBrace, line, position)
+    handleEvent(OpenBrace, line, position)
 
   override def closeBrace(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.ClosedBrace, line, position)
+    handleEvent(ClosedBrace, line, position)
 
   override def dash(line: Int, position: Int): Unit =
-    handleEvent(SyntaxEvent.Dash, line, position)
+    handleEvent(Dash, line, position)
 
   override def name(line: Int, position: Int, value: String): Unit = {
     builder.setName(value)
-    handleEvent(SyntaxEvent.Name, line, position)
+    handleEvent(Name, line, position)
   }
 
   override def error(line: Int, position: Int): Unit =
     builder.syntaxError(line, position)
 
   private val transitions: List[Transition] = List(
-    Transition(SyntaxState.Machine, SyntaxEvent.Machine, SyntaxState.MachineValue, None),
-    Transition(SyntaxState.MachineValue, SyntaxEvent.Name, SyntaxState.MachineNamed, Some(_.addMachine())),
-    Transition(SyntaxState.MachineNamed, SyntaxEvent.OpenBrace, SyntaxState.MachineSpec, None),
-    Transition(SyntaxState.MachineNamed, SyntaxEvent.Arrow, SyntaxState.InitialArrow, None),
-    Transition(SyntaxState.InitialArrow, SyntaxEvent.Name, SyntaxState.InitialArrowNamed, Some(_.setInitialState())),
-    Transition(SyntaxState.InitialArrowNamed, SyntaxEvent.OpenBrace, SyntaxState.MachineSpec, None),
-    Transition(SyntaxState.MachineSpec, SyntaxEvent.Initial, SyntaxState.InitialValue, None),
-    Transition(SyntaxState.InitialValue, SyntaxEvent.Name, SyntaxState.MachineSpec, Some(_.setInitialState())),
-    Transition(SyntaxState.MachineSpec, SyntaxEvent.ClosedBrace, SyntaxState.Machine, Some(_.concludeStateMachine())),
-    Transition(SyntaxState.Machine, SyntaxEvent.End, SyntaxState.Machine, None),
-    Transition(SyntaxState.MachineSpec, SyntaxEvent.State, SyntaxState.StateValue, None),
-    Transition(SyntaxState.StateValue, SyntaxEvent.OpenBrace, SyntaxState.SubtransitionSpec, Some(_.markAsSubtransition())),
-    Transition(SyntaxState.StateValue, SyntaxEvent.Name, SyntaxState.EventArrow, Some(_.addTransition())),
-    Transition(SyntaxState.EventArrow, SyntaxEvent.Arrow, SyntaxState.EventValue, None),
-    Transition(SyntaxState.EventValue, SyntaxEvent.Name, SyntaxState.NextStateArrow, Some(_.setEvent())),
-    Transition(SyntaxState.NextStateArrow, SyntaxEvent.Arrow, SyntaxState.NextStateValue, None),
-    Transition(SyntaxState.NextStateValue, SyntaxEvent.Dash, SyntaxState.ActionArrow, Some(_.setEmptyNextState())),
-    Transition(SyntaxState.NextStateValue, SyntaxEvent.Name, SyntaxState.ActionArrow, Some(_.setNextState())),
-    Transition(SyntaxState.ActionArrow, SyntaxEvent.ClosedBrace, SyntaxState.Machine, Some(_.concludeTransition())),
-    Transition(SyntaxState.ActionArrow, SyntaxEvent.Initial, SyntaxState.InitialValue, Some(_.concludeTransition())),
-    Transition(SyntaxState.ActionArrow, SyntaxEvent.Superstate, SyntaxState.SuperstateValue, Some(_.concludeTransition())),
-    Transition(SyntaxState.ActionArrow, SyntaxEvent.Arrow, SyntaxState.ActionDeclaration, None),
-    Transition(SyntaxState.ActionDeclaration, SyntaxEvent.Name, SyntaxState.MachineSpec, Some(_.setActionAndConclude())),
-    Transition(SyntaxState.ActionDeclaration, SyntaxEvent.OpenBrace, SyntaxState.ActionValue, None),
-    Transition(SyntaxState.ActionValue, SyntaxEvent.Name, SyntaxState.ActionValue, Some(_.addAction())),
-    Transition(SyntaxState.ActionValue, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
-    Transition(SyntaxState.MachineSpec, SyntaxEvent.Superstate, SyntaxState.SuperstateValue, Some(_.addTransition())),
-    Transition(SyntaxState.SuperstateValue, SyntaxEvent.Name, SyntaxState.SuperstateDeclaration, Some(_.markAsSuperstate())),
-    Transition(SyntaxState.SuperstateDeclaration, SyntaxEvent.OpenBrace, SyntaxState.SubtransitionSpec, Some(_.markAsSubtransition())),
-    Transition(SyntaxState.EventArrow, SyntaxEvent.OpenBrace, SyntaxState.SubtransitionSpec, Some(_.markAsSubtransition())),
-    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Entry, SyntaxState.EntryValue, None),
-    Transition(SyntaxState.EntryValue, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setEntryAction())),
-    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Exit, SyntaxState.ExitValue, None),
-    Transition(SyntaxState.ExitValue, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setExitAction())),
-    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.Event, SyntaxState.SubeventValue, None),
-    Transition(SyntaxState.SubeventValue, SyntaxEvent.Name, SyntaxState.SubNextStateArrow, Some(_.setEvent())),
-    Transition(SyntaxState.SubNextStateArrow, SyntaxEvent.Arrow, SyntaxState.SubNextStateValue, None),
-    Transition(SyntaxState.SubNextStateValue, SyntaxEvent.Dash, SyntaxState.SubactionArrow, Some(_.setEmptyNextState())),
-    Transition(SyntaxState.SubNextStateValue, SyntaxEvent.Name, SyntaxState.SubactionArrow, Some(_.setNextState())),
-    Transition(SyntaxState.SubactionArrow, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition())),
-    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Entry, SyntaxState.EntryValue, None),
-    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Exit, SyntaxState.ExitValue, None),
-    Transition(SyntaxState.SubactionArrow, SyntaxEvent.Arrow, SyntaxState.SubactionDeclaration, None),
-    Transition(SyntaxState.SubactionDeclaration, SyntaxEvent.Name, SyntaxState.SubtransitionSpec, Some(_.setActionAndConclude())),
-    Transition(SyntaxState.SubactionDeclaration, SyntaxEvent.OpenBrace, SyntaxState.SubactionValue, None),
-    Transition(SyntaxState.SubactionValue, SyntaxEvent.Name, SyntaxState.SubactionValue, Some(_.addAction())),
-    Transition(SyntaxState.SubactionValue, SyntaxEvent.ClosedBrace, SyntaxState.SubtransitionSpec, None),
-    Transition(SyntaxState.SubtransitionSpec, SyntaxEvent.ClosedBrace, SyntaxState.MachineSpec, Some(_.concludeTransition()))
+    Transition(MachineDeclaration, Machine, MachineValue, None),
+    Transition(MachineValue, Name, MachineNamed, Some(_.addMachine())),
+    Transition(MachineNamed, OpenBrace, MachineSpec, None),
+    Transition(MachineNamed, Arrow, InitialArrow, None),
+    Transition(InitialArrow, Name, InitialArrowNamed, Some(_.setInitialState())),
+    Transition(InitialArrowNamed, OpenBrace, MachineSpec, None),
+    Transition(MachineSpec, Initial, InitialValue, None),
+    Transition(InitialValue, Name, MachineSpec, Some(_.setInitialState())),
+    Transition(MachineSpec, ClosedBrace, MachineDeclaration, Some(_.concludeStateMachine())),
+    Transition(MachineDeclaration, End, MachineDeclaration, None),
+    Transition(MachineSpec, State, StateValue, None),
+    Transition(StateValue, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(StateValue, Name, EventArrow, Some(_.addTransition())),
+    Transition(EventArrow, Arrow, EventValue, None),
+    Transition(EventValue, Name, NextStateArrow, Some(_.setEvent())),
+    Transition(NextStateArrow, Arrow, NextStateValue, None),
+    Transition(NextStateValue, Dash, ActionArrow, Some(_.setEmptyNextState())),
+    Transition(NextStateValue, Name, ActionArrow, Some(_.setNextState())),
+    Transition(ActionArrow, ClosedBrace, MachineDeclaration, Some(_.concludeTransition())),
+    Transition(ActionArrow, Initial, InitialValue, Some(_.concludeTransition())),
+    Transition(ActionArrow, Superstate, SuperstateValue, Some(_.concludeTransition())),
+    Transition(ActionArrow, Arrow, ActionDeclaration, None),
+    Transition(ActionDeclaration, Name, MachineSpec, Some(_.setActionAndConclude())),
+    Transition(ActionDeclaration, OpenBrace, ActionValue, None),
+    Transition(ActionValue, Name, ActionValue, Some(_.addAction())),
+    Transition(ActionValue, ClosedBrace, MachineSpec, Some(_.concludeTransition())),
+    Transition(MachineSpec, Superstate, SuperstateValue, Some(_.addTransition())),
+    Transition(SuperstateValue, Name, SuperstateDeclaration, Some(_.markAsSuperstate())),
+    Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(EventArrow, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(SubtransitionSpec, Entry, EntryValue, None),
+    Transition(EntryValue, Name, SubtransitionSpec, Some(_.setEntryAction())),
+    Transition(SubtransitionSpec, Exit, ExitValue, None),
+    Transition(ExitValue, Name, SubtransitionSpec, Some(_.setExitAction())),
+    Transition(SubtransitionSpec, Event, SubeventValue, None),
+    Transition(SubeventValue, Name, SubNextStateArrow, Some(_.setEvent())),
+    Transition(SubNextStateArrow, Arrow, SubNextStateValue, None),
+    Transition(SubNextStateValue, Dash, SubactionArrow, Some(_.setEmptyNextState())),
+    Transition(SubNextStateValue, Name, SubactionArrow, Some(_.setNextState())),
+    Transition(SubactionArrow, ClosedBrace, MachineSpec, Some(_.concludeTransition())),
+    Transition(SubactionArrow, Entry, EntryValue, None),
+    Transition(SubactionArrow, Exit, ExitValue, None),
+    Transition(SubactionArrow, Arrow, SubactionDeclaration, None),
+    Transition(SubactionDeclaration, Name, SubtransitionSpec, Some(_.setActionAndConclude())),
+    Transition(SubactionDeclaration, OpenBrace, SubactionValue, None),
+    Transition(SubactionValue, Name, SubactionValue, Some(_.addAction())),
+    Transition(SubactionValue, ClosedBrace, SubtransitionSpec, None),
+    Transition(SubtransitionSpec, ClosedBrace, MachineSpec, Some(_.concludeTransition()))
   )
 
   private def handleEvent(event: SyntaxEvent, line: Int, position: Int): Unit =
@@ -111,24 +113,22 @@ class SyntacticalAnalyzer(builder: SyntaxBuilder) extends TokenCollector {
 
   private def handleEventError(event: SyntaxEvent, line: Int, position: Int): Unit =
     state match {
-      case SyntaxState.Machine | SyntaxState.MachineValue | SyntaxState.MachineNamed |
-           SyntaxState.InitialArrow | SyntaxState.InitialArrowNamed | SyntaxState.InitialValue =>
+      case MachineDeclaration | MachineValue | MachineNamed | InitialArrow |
+           InitialArrowNamed | InitialValue =>
         builder.machineError(state, event, line, position)
 
-      case SyntaxState.MachineSpec | SyntaxState.StateValue | SyntaxState.EventArrow |
-           SyntaxState.EventValue | SyntaxState.NextStateArrow | SyntaxState.NextStateValue |
-           SyntaxState.ActionArrow | SyntaxState.ActionDeclaration | SyntaxState.ActionValue =>
+      case MachineSpec | StateValue | EventArrow | EventValue | NextStateArrow |
+           NextStateValue | ActionArrow | ActionDeclaration | ActionValue =>
         builder.transitionError(state, event, line, position)
 
-      case SyntaxState.SuperstateValue | SyntaxState.SuperstateDeclaration =>
+      case SuperstateValue | SuperstateDeclaration =>
         builder.superstateError(state, event, line, position)
 
-      case SyntaxState.EntryValue | SyntaxState.ExitValue =>
+      case EntryValue | ExitValue =>
         builder.entryExitError(state, event, line, position)
 
-      case SyntaxState.SubtransitionSpec | SyntaxState.SubeventValue | SyntaxState.SubNextStateArrow |
-           SyntaxState.SubNextStateValue | SyntaxState.SubactionArrow | SyntaxState.SubactionDeclaration |
-           SyntaxState.SubactionValue =>
+      case SubtransitionSpec | SubeventValue | SubNextStateArrow |
+           SubNextStateValue | SubactionArrow | SubactionDeclaration | SubactionValue =>
         builder.subtransitionError(state, event, line, position)
     }
 }
