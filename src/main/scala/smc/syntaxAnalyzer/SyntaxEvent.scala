@@ -14,3 +14,4 @@ enum SyntaxEvent:
   case ClosedBrace
   case Dash
   case Name
+  case End

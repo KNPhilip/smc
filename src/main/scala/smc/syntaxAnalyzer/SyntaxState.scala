@@ -27,4 +27,3 @@ enum SyntaxState:
   case SubactionArrow
   case SubactionDeclaration
   case SubactionValue
-  case End

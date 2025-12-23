@@ -15,4 +15,11 @@ trait SyntaxBuilder {
   def setExitAction(): Unit
   def concludeTransition(): Unit
   def concludeStateMachine(): Unit
+  def setName(name: String): Unit
+  def syntaxError(line: Int, position: Int): Unit
+  def machineError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit
+  def transitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit
+  def subtransitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit
+  def superstateError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit
+  def entryExitError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit
 }
