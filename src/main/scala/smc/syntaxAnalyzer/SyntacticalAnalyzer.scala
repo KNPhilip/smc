@@ -51,8 +51,8 @@ final class SyntacticalAnalyzer extends TokenCollector {
 
   override def error(line: Int, position: Int): Unit =
     builder.syntaxError(line, position)
-    
-  def getSyntaxModel(): Unit =
+
+  def getStateMachineSyntax(): Unit =
     builder.getStateMachine()
 
   private def handleEvent(event: SyntaxEvent, line: Int, position: Int): Unit =
@@ -107,7 +107,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
 
   private val transitionSpecTransitions: List[Transition] = List(
     Transition(MachineSpec, State, StateValue, None),
-    Transition(StateValue, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(StateValue, OpenBrace, SubtransitionSpec, None),
     Transition(StateValue, Name, EventArrow, Some(_.addTransition())),
     Transition(EventArrow, Arrow, EventValue, None),
     Transition(EventValue, Name, NextStateArrow, Some(_.setEvent())),
@@ -118,7 +118,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(ActionArrow, Initial, InitialValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Superstate, SuperstateValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Arrow, ActionDeclaration, None),
-    Transition(ActionDeclaration, Name, MachineSpec, Some(_.setActionAndConclude())),
+    Transition(ActionDeclaration, Name, MachineSpec, Some(_.addAction())),
     Transition(ActionDeclaration, OpenBrace, ActionValue, None),
     Transition(ActionValue, Name, ActionValue, Some(_.addAction())),
     Transition(ActionValue, ClosedBrace, MachineSpec, Some(_.concludeTransition())),
@@ -127,8 +127,8 @@ final class SyntacticalAnalyzer extends TokenCollector {
   private val superstateTransitions: List[Transition] = List(
     Transition(MachineSpec, Superstate, SuperstateValue, Some(_.addTransition())),
     Transition(SuperstateValue, Name, SuperstateDeclaration, Some(_.markAsSuperstate())),
-    Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
-    Transition(EventArrow, OpenBrace, SubtransitionSpec, Some(_.markAsSubtransition())),
+    Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, None),
+    Transition(EventArrow, OpenBrace, SubtransitionSpec, None),
   )
 
   private val entryAndExitTransitions: List[Transition] = List(
@@ -148,7 +148,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(SubactionArrow, Entry, EntryValue, None),
     Transition(SubactionArrow, Exit, ExitValue, None),
     Transition(SubactionArrow, Arrow, SubactionDeclaration, None),
-    Transition(SubactionDeclaration, Name, SubtransitionSpec, Some(_.setActionAndConclude())),
+    Transition(SubactionDeclaration, Name, SubtransitionSpec, Some(_.addAction())),
     Transition(SubactionDeclaration, OpenBrace, SubactionValue, None),
     Transition(SubactionValue, Name, SubactionValue, Some(_.addAction())),
     Transition(SubactionValue, ClosedBrace, SubtransitionSpec, None),
