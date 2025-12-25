@@ -5,7 +5,7 @@ import smc.syntaxAnalyzer.SyntaxState.*
 import smc.syntaxAnalyzer.SyntaxEvent.*
 
 final class SyntacticalAnalyzer extends TokenCollector {
-  private var state: SyntaxState = MachineSpec
+  private var state: SyntaxState = MachineDeclaration
   private val builder: SyntaxBuilder = new SyntaxBuilder()
 
   override def machine(line: Int, position: Int): Unit =
@@ -85,7 +85,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
         builder.subtransitionError(state, event, line, position)
     }
 
-  private val transitions: List[Transition] =
+  private lazy val transitions: List[Transition] =
     machineSpecTransitions ++
     transitionSpecTransitions ++
     superstateTransitions ++
