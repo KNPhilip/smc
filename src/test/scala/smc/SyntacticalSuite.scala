@@ -109,6 +109,10 @@ class SubtransitionSyntaxSuite extends SyntacticalSuite {
   }
 
   test("Parse subtransition with multiple entry actions") {
+    assertParsed("$state S { $event E => - $entry A1 $entry A2 }", "    S ENA1 ENA2 E S")
+  }
+
+  test("Parse subtransition with multiple entry actions grouped by braces") {
     assertParsed("$state S { $event E => - $entry {A1 A2} }", "    S ENA1 ENA2 E S")
   }
 
@@ -117,7 +121,16 @@ class SubtransitionSyntaxSuite extends SyntacticalSuite {
   }
 
   test("Parse subtransition with multiple exit actions") {
+    assertParsed("$state S { $event E => - $exit A1 $exit A2 }", "    S EXA1 EXA2 E S")
+  }
+
+  test("Parse subtransition with multiple exit actions grouped by braces") {
     assertParsed("$state S { $event E => - $exit {A1 A2} }", "    S EXA1 EXA2 E S")
+  }
+
+  test("Parse subtransition with multiple entry and exit actions") {
+    assertParsed("$state S { $event E => - $entry {A1 A2} $exit {A3 A4 A5} }",
+      "    S ENA1 ENA2 EXA3 EXA4 EXA5 E S")
   }
 
   test("Parse subtransition with inheritance") {
@@ -159,9 +172,9 @@ class SuperstateSyntaxSuite extends SyntacticalSuite {
   test("Parse superstate with multiple events") {
     assertParsed("$superstate Su { $event Ev1 => - => {Ac1 Ac2} $event Ev2 => St2 => {Ac3} }",
       "    (Su) {\n" +
-        "      Ev1 Su {Ac1 Ac2}\n" +
-        "      Ev2 St2 Ac3\n" +
-        "    }")
+      "      Ev1 Su {Ac1 Ac2}\n" +
+      "      Ev2 St2 Ac3\n" +
+      "    }")
   }
 
   test("Parse superstate with single entry action") {
@@ -182,5 +195,85 @@ class SuperstateSyntaxSuite extends SyntacticalSuite {
 
   test("Parse superstate which has inheritance of its own") {
     assertParsed("$superstate SU1 $inherits SU2 { $event E => - }", "    (SU1) SUSU2 E SU1")
+  }
+}
+
+class ComplicatedSyntaxSuite extends SyntacticalSuite {
+  test("Parse sample coffee machine FSM") {
+    assertParsed(
+      "$machine \"CoffeeMachine\" {\n" +
+      "  $initial \"Selecting\"\n" +
+      "  $state \"Selecting\" => \"ChooseDrink\" => \"Brewing\"\n" +
+      "  $state \"Brewing\" => \"Finish\" => \"Selecting\" => \"dispenseCup\"\n" +
+      "}",
+      "{\n" +
+      "  machine CoffeeMachine initial Selecting\n" +
+      "    Selecting ChooseDrink Brewing\n" +
+      "    Brewing Finish Selecting dispenseCup\n" +
+      "}")
+  }
+
+  test("Parse more complicated sample coffee machine FSM") {
+    assertParsed(
+      "$machine CoffeeMachine {\n" +
+      "  $initial Selecting\n" +
+      "  $superstate Operational {\n" +
+      "    $event PowerOutage => Off\n" +
+      "  }\n" +
+      "  $state Selecting $inherits Operational {\n" +
+      "    $entry DisplayMenu\n" +
+      "    $event ChooseDrink => Brewing\n" +
+      "    $event NoMoreCoffee => Selecting\n" +
+      "  }\n" +
+      "  $state Brewing $inherits Operational {\n" +
+      "    $entry StartHeating\n" +
+      "    $exit StopHeating\n" +
+      "    $event Finish => Selecting => dispenseCup\n" +
+      "  }\n" +
+      "  $state Off {\n" +
+      "    $entry PowerDownComponents\n" +
+      "    $event PowerRestored => Selecting\n" +
+      "  }\n" +
+      "}",
+      "{\n" +
+      "  machine CoffeeMachine initial Selecting\n" +
+      "    (Operational) PowerOutage Off\n" +
+      "    Selecting SUOperational ENDisplayMenu {\n" +
+      "      ChooseDrink Brewing\n" +
+      "      NoMoreCoffee Selecting\n" +
+      "    }\n" +
+      "    Brewing SUOperational ENStartHeating EXStopHeating Finish Selecting dispenseCup\n" +
+      "    Off ENPowerDownComponents PowerRestored Selecting\n" +
+      "}")
+  }
+
+  test("Parse syntax sugar sample printer FSM") {
+    assertParsed(
+      "$machine Printer => Idle {\n" +
+      "  $superstate Operational {\n" +
+      "    $event PowerLoss => Offline\n" +
+      "  }\n" +
+      "  $state Idle $inherits Operational {\n" +
+      "    $event Print => Printing\n" +
+      "    $event Cancel => - => {logCancelWithoutJob beep}\n" +
+      "  }\n" +
+      "  $state Printing $inherits Operational {\n" +
+      "    $event Finish => Idle => ejectPage\n" +
+      "  }\n" +
+      "  $state Offline {\n" +
+      "    $entry PowerDown\n" +
+      "    $event PowerRestored => Idle\n" +
+      "  }\n" +
+      "}",
+      "{\n" +
+        "  machine Printer initial Idle\n" +
+        "    (Operational) PowerLoss Offline\n" +
+        "    Idle SUOperational {\n" +
+        "      Print Printing\n" +
+        "      Cancel Idle {logCancelWithoutJob beep}\n" +
+        "    }\n" +
+        "    Printing SUOperational Finish Idle ejectPage\n" +
+        "    Offline ENPowerDown PowerRestored Idle\n" +
+        "}")
   }
 }
