@@ -92,20 +92,20 @@ $machine "Door" {
 
 To make things succinct, there are several _syntactical sugars_ built into the SMC. For example it is optional to define actions or just leave them out in case none are needed.
 
-Another neat syntax shortcut is that you can reduce the verbosity of state definitions by omitting the `$initial` keyword and specifying the initial state directly in the `$machine` declaration by using the `=>` syntax. The arrow syntax can also be used as a _shortcut for inheritance_.
+Another neat syntax shortcut is that you can reduce the verbosity of state definitions by omitting the `$initial` keyword and specifying the initial state directly in the `$machine` declaration by using the `=>` syntax.
 
-You can also use a hyphen to indicate that a transition will leave the state unchanged, even though you _still execute an action_. To define _multiple actions_ for a _single transition_, group them with curly braces `{}`. Here is an example using the mentioned syntax sugars:
+You can also use a hyphen to indicate that a transition will leave the state unchanged, even though you _still might execute an action_. To define _multiple actions_ for a _single transition_, group them with curly braces `{}`. Here is an example using the mentioned syntax sugars:
 
 ```sm
 $machine "Printer" => "Idle" {
   $superstate "Operational" {
     $event "PowerLoss" => "Offline"
   }
-  $state "Idle" => "Operational" {
+  $state "Idle" $inherits "Operational" {
     $event "Print" => "Printing"
     $event "Cancel" => - => {"logCancelWithoutJob" "beep"}
   }
-  $state "Printing" => "Operational" {
+  $state "Printing" $inherits "Operational" {
     $event "Finish" => "Idle" => "ejectPage"
   }
   $state "Offline" {
@@ -148,11 +148,10 @@ initialState ::= "$initial" stateName
 superstate ::= "$superstate" string "{" superItem* "}"
 superItem  ::= entryAction | exitAction | event | comment | whitespace
 
-state ::= "$state" stateName ( inheritsClause | inheritsArrow )?
+state ::= "$state" stateName ( inheritsClause )?
           ( "{" stateItem* "}" | terseTransition )
 
 inheritsClause ::= "$inherits" string
-inheritsArrow  ::= "=>" string
 
 stateItem ::= entryAction | exitAction | event | comment | whitespace
 terseTransition ::= "=>" eventName "=>" destination ( "=>" action )?
