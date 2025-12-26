@@ -76,8 +76,8 @@ private object SyntaxRenderer {
     val base =
       if (state.isSuperState) s"(${state.name})" else state.name
 
-    val supers = state
-      .superStates.collect { case s if s != null => "SU" + s }.mkString
+    val supers = state.superStates
+      .collect { case s if s != null => " SU" + s }.mkString
 
     val entries = state.entryActions
       .collect { case a if a != null => " EN" + a }.mkString

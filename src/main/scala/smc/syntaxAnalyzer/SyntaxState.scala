@@ -8,6 +8,7 @@ enum SyntaxState:
   case InitialArrowNamed
   case MachineSpec
   case InitialValue
+  case InheritsValue
   case StateValue
   case EventArrow
   case EventValue
@@ -19,7 +20,9 @@ enum SyntaxState:
   case SuperstateValue
   case SuperstateDeclaration
   case SubtransitionSpec
+  case EntryDeclaration
   case EntryValue
+  case ExitDeclaration
   case ExitValue
   case SubeventValue
   case SubNextStateArrow

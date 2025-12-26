@@ -76,10 +76,10 @@ final class SyntacticalAnalyzer extends TokenCollector {
            NextStateValue | ActionArrow | ActionDeclaration | ActionValue =>
         builder.transitionError(state, event, line, position)
 
-      case SuperstateValue | SuperstateDeclaration =>
+      case InheritsValue | SuperstateValue | SuperstateDeclaration =>
         builder.superstateError(state, event, line, position)
 
-      case EntryValue | ExitValue =>
+      case EntryDeclaration | EntryValue | ExitValue | ExitDeclaration =>
         builder.entryExitError(state, event, line, position)
 
       case SubtransitionSpec | SubeventValue | SubNextStateArrow |
@@ -110,6 +110,9 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(MachineSpec, State, StateValue, None),
     Transition(StateValue, Name, EventArrow, Some(_.addTransition())),
     Transition(EventArrow, OpenBrace, SubtransitionSpec, None),
+    Transition(EventArrow, Inherits, InheritsValue, None),
+    Transition(InheritsValue, Name, InheritsValue, Some(_.addInheritance())),
+    Transition(InheritsValue, OpenBrace, SubtransitionSpec, None),
     Transition(EventArrow, Arrow, EventValue, None),
     Transition(EventValue, Name, NextStateArrow, Some(_.setEvent())),
     Transition(NextStateArrow, Arrow, NextStateValue, None),
@@ -122,21 +125,27 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(ActionDeclaration, Name, MachineSpec, Some(_.addAction())),
     Transition(ActionDeclaration, OpenBrace, ActionValue, None),
     Transition(ActionValue, Name, ActionValue, Some(_.addAction())),
-    Transition(ActionValue, ClosedBrace, MachineSpec, Some(_.concludeTransition())),
+    Transition(ActionValue, ClosedBrace, MachineSpec, Some(_.concludeTransition()))
   )
 
   private val superstateTransitions: List[Transition] = List(
     Transition(MachineSpec, Superstate, SuperstateValue, Some(_.addTransition())),
     Transition(SuperstateValue, Name, SuperstateDeclaration, Some(_.markAsSuperstate())),
     Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, None),
-    Transition(EventArrow, OpenBrace, SubtransitionSpec, None),
+    Transition(EventArrow, OpenBrace, SubtransitionSpec, None)
   )
 
   private val entryAndExitTransitions: List[Transition] = List(
-    Transition(SubtransitionSpec, Entry, EntryValue, None),
-    Transition(EntryValue, Name, SubtransitionSpec, Some(_.setEntryAction())),
-    Transition(SubtransitionSpec, Exit, ExitValue, None),
-    Transition(ExitValue, Name, SubtransitionSpec, Some(_.setExitAction())),
+    Transition(SubtransitionSpec, Entry, EntryDeclaration, None),
+    Transition(EntryDeclaration, Name, SubtransitionSpec, Some(_.addEntryAction())),
+    Transition(EntryDeclaration, OpenBrace, EntryValue, None),
+    Transition(EntryValue, Name, EntryValue, Some(_.addEntryAction())),
+    Transition(EntryValue, ClosedBrace, SubtransitionSpec, None),
+    Transition(SubtransitionSpec, Exit, ExitDeclaration, None),
+    Transition(ExitDeclaration, Name, SubtransitionSpec, Some(_.addExitAction())),
+    Transition(ExitDeclaration, OpenBrace, ExitValue, None),
+    Transition(ExitValue, Name, ExitValue, Some(_.addExitAction())),
+    Transition(ExitValue, ClosedBrace, SubtransitionSpec, None)
   )
 
   private val subtransitionSpecTransitions: List[Transition] = List(
@@ -146,8 +155,8 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(SubNextStateValue, Dash, SubactionArrow, Some(_.setEmptyNextState())),
     Transition(SubNextStateValue, Name, SubactionArrow, Some(_.setNextState())),
     Transition(SubactionArrow, ClosedBrace, MachineSpec, Some(_.concludeTransition())),
-    Transition(SubactionArrow, Entry, EntryValue, None),
-    Transition(SubactionArrow, Exit, ExitValue, None),
+    Transition(SubactionArrow, Entry, EntryDeclaration, None),
+    Transition(SubactionArrow, Exit, ExitDeclaration, None),
     Transition(SubactionArrow, Arrow, SubactionDeclaration, None),
     Transition(SubactionDeclaration, Name, SubtransitionSpec, Some(_.addAction())),
     Transition(SubactionDeclaration, OpenBrace, SubactionValue, None),

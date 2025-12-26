@@ -45,11 +45,14 @@ final class SyntaxBuilder {
     transition.isSuperState = true
   }
 
-  def setEntryAction(): Unit =
+  def addEntryAction(): Unit =
     transition.entryActions += name
 
-  def setExitAction(): Unit =
+  def addExitAction(): Unit =
     transition.exitActions += name
+
+  def addInheritance(): Unit =
+    transition.superStates += name
 
   def concludeTransition(): Unit = {
     machine.states += transition
