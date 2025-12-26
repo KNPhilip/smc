@@ -54,6 +54,8 @@ final class SyntacticalAnalyzer extends TokenCollector {
 
   def getStateMachineSyntax: StateMachineSyntax = builder.getStateMachine
 
+  def clear(): Unit = builder.clear()
+
   private def handleEvent(event: SyntaxEvent, line: Int, position: Int): Unit =
     transitions.find(t => t.currentState == state && t.event == event) match {
       case Some(t) =>
@@ -106,14 +108,14 @@ final class SyntacticalAnalyzer extends TokenCollector {
 
   private val transitionSpecTransitions: List[Transition] = List(
     Transition(MachineSpec, State, StateValue, None),
-    Transition(StateValue, OpenBrace, SubtransitionSpec, None),
     Transition(StateValue, Name, EventArrow, Some(_.addTransition())),
+    Transition(EventArrow, OpenBrace, SubtransitionSpec, None),
     Transition(EventArrow, Arrow, EventValue, None),
     Transition(EventValue, Name, NextStateArrow, Some(_.setEvent())),
     Transition(NextStateArrow, Arrow, NextStateValue, None),
     Transition(NextStateValue, Dash, ActionArrow, Some(_.setEmptyNextState())),
     Transition(NextStateValue, Name, ActionArrow, Some(_.setNextState())),
-    Transition(ActionArrow, ClosedBrace, MachineDeclaration, Some(_.concludeTransition())),
+    Transition(ActionArrow, ClosedBrace, MachineDeclaration, Some(_.concludeStateMachine())),
     Transition(ActionArrow, Initial, InitialValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Superstate, SuperstateValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Arrow, ActionDeclaration, None),

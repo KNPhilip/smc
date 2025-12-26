@@ -1,5 +1,6 @@
 package smc.syntaxAnalyzer
 
+import scala.collection.mutable.ListBuffer
 import smc.syntaxAnalyzer.ErrorType.*
 
 final class SyntaxBuilder {
@@ -9,6 +10,14 @@ final class SyntaxBuilder {
   private var name: String = null
 
   def getStateMachine: StateMachineSyntax = syntax
+
+  def clear(): Unit = {
+    syntax.machines = ListBuffer.empty
+    syntax.errors = ListBuffer.empty
+    machine = null
+    transition = null
+    name = null
+  }
 
   def addMachine(): Unit =
     machine = new StateMachine(name)
@@ -48,6 +57,9 @@ final class SyntaxBuilder {
   }
 
   def concludeStateMachine(): Unit = {
+    if (transition != null)
+      machine.states += transition
+
     syntax.machines += machine
     machine = null
     transition = null
