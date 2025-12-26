@@ -1,32 +1,33 @@
 package smc.syntaxAnalyzer
 
 enum SyntaxState:
-  case MachineDeclaration
-  case MachineValue
-  case MachineNamed
-  case InitialArrow
-  case InitialArrowNamed
-  case MachineSpec
-  case InitialValue
-  case InheritsValue
-  case StateValue
-  case EventArrow
-  case EventValue
-  case NextStateArrow
-  case NextStateValue
-  case ActionArrow
-  case ActionDeclaration
-  case ActionValue
-  case SuperstateValue
-  case SuperstateDeclaration
-  case SubtransitionSpec
-  case EntryDeclaration
-  case EntryValue
-  case ExitDeclaration
-  case ExitValue
-  case SubeventValue
-  case SubNextStateArrow
-  case SubNextStateValue
-  case SubactionArrow
-  case SubactionDeclaration
-  case SubactionValue
+  case
+  MachineDeclaration,
+  MachineValue,
+  MachineNamed,
+  InitialArrow,
+  InitialArrowNamed,
+  MachineSpec,
+  InitialValue,
+  InheritsValue,
+  StateValue,
+  EventArrow,
+  EventValue,
+  NextStateArrow,
+  NextStateValue,
+  ActionArrow,
+  ActionDeclaration,
+  ActionValue,
+  SuperstateValue,
+  SuperstateDeclaration,
+  SubtransitionSpec,
+  EntryDeclaration,
+  EntryValue,
+  ExitDeclaration,
+  ExitValue,
+  SubeventValue,
+  SubNextStateArrow,
+  SubNextStateValue,
+  SubactionArrow,
+  SubactionDeclaration,
+  SubactionValue
