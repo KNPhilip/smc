@@ -131,6 +131,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
   private val superstateTransitions: List[Transition] = List(
     Transition(MachineSpec, Superstate, SuperstateValue, Some(_.addTransition())),
     Transition(SuperstateValue, Name, SuperstateDeclaration, Some(_.markAsSuperstate())),
+    Transition(SuperstateDeclaration, Inherits, InheritsValue, None),
     Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, None),
     Transition(EventArrow, OpenBrace, SubtransitionSpec, None)
   )

@@ -124,3 +124,63 @@ class SubtransitionSyntaxSuite extends SyntacticalSuite {
     assertParsed("$state S $inherits SU { $event E => - }", "    S SUSU E S")
   }
 }
+
+class SuperstateSyntaxSuite extends SyntacticalSuite {
+  override protected def assertParsed(input: String, output: String): Unit = {
+    val inputWithBoilerplate = s"$$machine MyMachine => Init {$input}"
+    val outputWithBoilerplate = s"{\n  machine MyMachine initial Init\n$output\n}"
+    super.assertParsed(inputWithBoilerplate, outputWithBoilerplate)
+  }
+
+  test("Parse empty superstate") {
+    assertParsed("$superstate Su {}", "    (Su) ")
+  }
+
+  test("Parse simple superstate") {
+    assertParsed("$superstate Su { $event Ev => De }", "    (Su) Ev De")
+  }
+
+  test("Parse superstate with hyphen destination") {
+    assertParsed("$superstate Su { $event Ev => - }", "    (Su) Ev Su")
+  }
+
+  test("Parse superstate with single action") {
+    assertParsed("$superstate Su { $event Ev => - => Ac }", "    (Su) Ev Su Ac")
+  }
+
+  test("Parse superstate with single grouped action, treating it as single action") {
+    assertParsed("$superstate Su { $event Ev => - => {Ac} }", "    (Su) Ev Su Ac")
+  }
+
+  test("Parse superstate with multiple grouped actions") {
+    assertParsed("$superstate Su { $event Ev => - => {Ac Ac} }", "    (Su) Ev Su {Ac Ac}")
+  }
+
+  test("Parse superstate with multiple events") {
+    assertParsed("$superstate Su { $event Ev1 => - => {Ac1 Ac2} $event Ev2 => St2 => {Ac3} }",
+      "    (Su) {\n" +
+        "      Ev1 Su {Ac1 Ac2}\n" +
+        "      Ev2 St2 Ac3\n" +
+        "    }")
+  }
+
+  test("Parse superstate with single entry action") {
+    assertParsed("$superstate Su { $event E => - $entry A }", "    (Su) ENA E Su")
+  }
+
+  test("Parse superstate with multiple entry actions") {
+    assertParsed("$superstate Su { $event E => - $entry {A1 A2} }", "    (Su) ENA1 ENA2 E Su")
+  }
+
+  test("Parse superstate with single exit action") {
+    assertParsed("$superstate Su { $event E => - $exit A }", "    (Su) EXA E Su")
+  }
+
+  test("Parse superstate with multiple exit actions") {
+    assertParsed("$superstate Su { $event E => - $exit {A1 A2} }", "    (Su) EXA1 EXA2 E Su")
+  }
+
+  test("Parse superstate which has inheritance of its own") {
+    assertParsed("$superstate SU1 $inherits SU2 { $event E => - }", "    (SU1) SUSU2 E SU1")
+  }
+}
