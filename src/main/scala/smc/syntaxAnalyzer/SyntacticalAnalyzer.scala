@@ -54,7 +54,10 @@ final class SyntacticalAnalyzer extends TokenCollector {
 
   def getStateMachineSyntax: StateMachineSyntax = builder.getStateMachine
 
-  def clear(): Unit = builder.clear()
+  def clear(): Unit = {
+    state = MachineDeclaration
+    builder.clear()
+  }
 
   private def handleEvent(event: SyntaxEvent, line: Int, position: Int): Unit =
     transitions.find(t => t.currentState == state && t.event == event) match {

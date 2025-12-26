@@ -40,25 +40,15 @@ class Event(val name: String) {
 }
 
 private object SyntaxRenderer {
-  def render(syntax: StateMachineSyntax): String =
-    renderMachines(syntax.machines) + renderErrors(syntax.errors)
-
-  private def renderMachines(machines: ListBuffer[StateMachine]): String = {
-    val rendered =
-      machines.collect { case m if m != null => renderMachine(m) }
+  def render(syntax: StateMachineSyntax): String = {
+    val rendered = syntax.machines
+      .collect { case m if m != null => renderMachine(m) }
 
     if (rendered.nonEmpty)
       rendered.mkString("{\n", "", "}\n")
     else
       ""
   }
-
-  private def renderErrors(errors: ListBuffer[SyntaxError]): String =
-    errors.collectFirst {
-      case e if e != null =>
-        s"Syntax error: ${e.errorType}. ${e.message}. " +
-          s"line ${e.lineNumber}, position ${e.position}.\n"
-    }.getOrElse("")
 
   private def renderMachine(machine: StateMachine): String = {
     val initial = Option(machine.initialState)

@@ -16,6 +16,17 @@ class SyntacticalSuite extends FunSuite {
     lexer.lex(input)
     assertEquals(parser.getStateMachineSyntax.toString.trim, output)
   }
+
+  protected def assertParseError(input: String, output: String): Unit = {
+    lexer.lex(input)
+    val errors = parser.getStateMachineSyntax.errors.collectFirst {
+      case e if e != null =>
+        s"Syntax error: ${e.errorType}. ${e.message}. " +
+        s"line ${e.lineNumber}, position ${e.position}.\n"
+    }.getOrElse("")
+
+    assertEquals(errors.trim, output.trim)
+  }
 }
 
 class MachineSyntaxSuite extends SyntacticalSuite {
@@ -275,5 +286,47 @@ class ComplicatedSyntaxSuite extends SyntacticalSuite {
         "    Printing SUOperational Finish Idle ejectPage\n" +
         "    Offline ENPowerDown PowerRestored Idle\n" +
         "}")
+  }
+}
+
+class ErrorSyntaxSuite extends SyntacticalSuite {
+  test("Parser gives unknown syntax error") {
+    assertParseError("¤#.%!€&?",
+      "Syntax error: SyntaxError. . line 1, position 1.")
+  }
+
+  test("Line number and positions are functioning") {
+    assertParseError("$machine m {\n$initial %#!€\n}",
+      "Syntax error: SyntaxError. . line 2, position 10.")
+  }
+
+  test("Parser gives invalid machine error") {
+    assertParseError("blah",
+      "Syntax error: MachineError. MachineDeclaration|Name. line 1, position 0.")
+  }
+
+  test("Parser gives invalid transition error") {
+    assertParseError("$machine m => i { $state }",
+      "Syntax error: TransitionError. StateValue|ClosedBrace. line 1, position 25.")
+  }
+
+  test("Parser gives invalid subtransition error") {
+    assertParseError("$machine m => i { $state s { $event } }",
+      "Syntax error: SubtransitionError. SubeventValue|ClosedBrace. line 1, position 36.")
+  }
+
+  test("Parser gives invalid superstate error") {
+    assertParseError("$machine m => i { $superstate }",
+      "Syntax error: SuperstateError. SuperstateValue|ClosedBrace. line 1, position 30.")
+  }
+
+  test("Parser gives invalid entry action error") {
+    assertParseError("$machine m => i { $state s { $entry } }",
+      "Syntax error: EntryExitError. EntryDeclaration|ClosedBrace. line 1, position 36.")
+  }
+
+  test("Parser gives invalid exit action error") {
+    assertParseError("$machine m => i { $state s { $exit } }",
+      "Syntax error: EntryExitError. ExitDeclaration|ClosedBrace. line 1, position 35.")
   }
 }
