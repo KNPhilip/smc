@@ -74,18 +74,7 @@ final class SyntaxBuilder {
   def syntaxError(line: Int, position: Int): Unit =
     syntax.errors.addOne(new SyntaxError(SyntaxError, "", line, position))
 
-  def machineError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
-    syntax.errors.addOne(new SyntaxError(MachineError, s"$state|$event", line, position))
-
-  def transitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
-    syntax.errors.addOne(new SyntaxError(TransitionError, s"$state|$event", line, position))
-
-  def subtransitionError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
-    syntax.errors.addOne(new SyntaxError(SubtransitionError, s"$state|$event", line, position))
-
-  def superstateError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
-    syntax.errors.addOne(new SyntaxError(SuperstateError, s"$state|$event", line, position))
-
-  def entryExitError(state: SyntaxState, event: SyntaxEvent, line: Int, position: Int): Unit =
-    syntax.errors.addOne(new SyntaxError(EntryExitError, s"$state|$event", line, position))
+  def tableError(errorType: ErrorType, state: SyntaxState,
+                 event: SyntaxEvent, line: Int, position: Int): Unit =
+    syntax.errors.addOne(new SyntaxError(errorType, s"$state|$event", line, position))
 }

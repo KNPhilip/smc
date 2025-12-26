@@ -1,6 +1,7 @@
 package smc.syntaxAnalyzer
 
 import smc.lexicalAnalyzer.TokenCollector
+import smc.syntaxAnalyzer.ErrorType.*
 import smc.syntaxAnalyzer.SyntaxState.*
 import smc.syntaxAnalyzer.SyntaxEvent.*
 
@@ -73,21 +74,21 @@ final class SyntacticalAnalyzer extends TokenCollector {
     state match {
       case MachineDeclaration | MachineValue | MachineNamed | InitialArrow |
            InitialArrowNamed | InitialValue =>
-        builder.machineError(state, event, line, position)
+        builder.tableError(MachineError, state, event, line, position)
 
       case MachineSpec | StateValue | EventArrow | EventValue | NextStateArrow |
            NextStateValue | ActionArrow | ActionDeclaration | ActionValue =>
-        builder.transitionError(state, event, line, position)
+        builder.tableError(TransitionError, state, event, line, position)
 
       case InheritsValue | SuperstateValue | SuperstateDeclaration =>
-        builder.superstateError(state, event, line, position)
+        builder.tableError(SuperstateError, state, event, line, position)
 
       case EntryDeclaration | EntryValue | ExitValue | ExitDeclaration =>
-        builder.entryExitError(state, event, line, position)
+        builder.tableError(EntryExitError, state, event, line, position)
 
       case SubtransitionSpec | SubeventValue | SubNextStateArrow |
            SubNextStateValue | SubactionArrow | SubactionDeclaration | SubactionValue =>
-        builder.subtransitionError(state, event, line, position)
+        builder.tableError(SubtransitionError, state, event, line, position)
     }
 
   private lazy val transitions: List[Transition] =
