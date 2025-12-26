@@ -1,8 +1,9 @@
 package smc
 
 import munit.FunSuite
+import scala.collection.mutable.ListBuffer
 import smc.lexicalAnalyzer.LexicalAnalyzer
-import smc.syntaxAnalyzer.SyntacticalAnalyzer
+import smc.syntaxAnalyzer.{Event, State, StateMachine, StateMachineSyntax, SyntacticalAnalyzer, SyntaxError}
 
 class SyntacticalSuite extends FunSuite {
   protected val parser: SyntacticalAnalyzer = new SyntacticalAnalyzer()
@@ -14,18 +15,14 @@ class SyntacticalSuite extends FunSuite {
 
   protected def assertParsed(input: String, output: String): Unit = {
     lexer.lex(input)
-    assertEquals(parser.getStateMachineSyntax.toString.trim, output)
+    val parsed = StateMachineRenderer.render(parser.getStateMachineSyntax)
+    assertEquals(parsed.trim, output.trim)
   }
 
   protected def assertParseError(input: String, output: String): Unit = {
     lexer.lex(input)
-    val errors = parser.getStateMachineSyntax.errors.collectFirst {
-      case e if e != null =>
-        s"Syntax error: ${e.errorType}. ${e.message}. " +
-        s"line ${e.lineNumber}, position ${e.position}.\n"
-    }.getOrElse("")
-
-    assertEquals(errors.trim, output.trim)
+    val parsedErrors = StateMachineRenderer.render(parser.getStateMachineSyntax.errors)
+    assertEquals(parsedErrors.trim, output.trim)
   }
 }
 
@@ -328,5 +325,85 @@ class ErrorSyntaxSuite extends SyntacticalSuite {
   test("Parser gives invalid exit action error") {
     assertParseError("$machine m => i { $state s { $exit } }",
       "Syntax error: EntryExitError. ExitDeclaration|ClosedBrace. line 1, position 35.")
+  }
+}
+
+private object StateMachineRenderer {
+  def render(errors: ListBuffer[SyntaxError]): String = {
+    errors.collectFirst {
+      case e if e != null =>
+        s"Syntax error: ${e.errorType}. ${e.message}. " +
+        s"line ${e.lineNumber}, position ${e.position}.\n"
+    }.getOrElse("")
+  }
+
+  def render(syntax: StateMachineSyntax): String = {
+    val rendered = syntax.machines
+      .collect { case m if m != null => renderMachine(m) }
+
+    if (rendered.nonEmpty)
+      rendered.mkString("{\n", "", "}\n")
+    else
+      ""
+  }
+
+  private def renderMachine(machine: StateMachine): String = {
+    val initial = Option(machine.initialState)
+      .map(s => s"initial $s").getOrElse("")
+
+    val states =
+      machine.states
+        .collect { case s if s != null => renderState(s) }
+        .mkString("")
+
+    s"  machine ${machine.name} $initial\n" + states
+  }
+
+  private def renderState(state: State): String = {
+    val base =
+      if (state.isSuperState) s"(${state.name})" else state.name
+
+    val supers = state.superStates
+      .collect { case s if s != null => " SU" + s }.mkString
+
+    val entries = state.entryActions
+      .collect { case a if a != null => " EN" + a }.mkString
+
+    val exits = state.exitActions
+      .collect { case a if a != null => " EX" + a }.mkString
+
+    val events = renderEvents(state.events)
+
+    s"    ${base + supers + entries + exits} $events\n"
+  }
+
+  private def renderEvents(input: ListBuffer[Event]): String = {
+    val events = input.collect { case e if e != null => e }
+
+    if (events.size == 1)
+      renderEvent(events.head)
+    else if (events.nonEmpty)
+      events.map(e => "      " + renderEvent(e))
+        .mkString("{\n", "\n", "\n    }")
+    else
+      ""
+  }
+
+  private def renderEvent(event: Event): String =
+    List(
+      event.name,
+      Option(event.targetState).getOrElse(""),
+      renderActions(event.actions)
+    ).filter(_.nonEmpty).mkString(" ")
+
+  private def renderActions(actions: ListBuffer[String]): String = {
+    val acts = actions.collect { case a if a != null => a }
+
+    if (acts.size == 1)
+      acts.head
+    else if (acts.nonEmpty)
+      acts.mkString("{", " ", "}")
+    else
+      ""
   }
 }
