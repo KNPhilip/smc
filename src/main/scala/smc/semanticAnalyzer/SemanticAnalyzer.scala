@@ -1,15 +1,31 @@
 package smc.semanticAnalyzer
 
+import scala.collection.mutable.ListBuffer
 import smc.semanticAnalyzer.SemanticError.*
 import smc.syntaxAnalyzer.{StateMachineSyntax, StateMachine, State}
 
-final class SemanticAnalyzer {
-  var syntax = new SemanticSyntax()
+enum SemanticError:
+  case
+  NO_MACHINES,
+  DUPLICATE_MACHINE,
+  NO_INITIAL_STATE,
+  NO_TRANSITIONS,
+  UNDEFINED_INITIAL_STATE,
+  UNDEFINED_NEXT_STATE,
+  UNUSED_STATE,
+  DUPLICATE_STATE,
+  DUPLICATE_TRANSITION,
+  UNDEFINED_SUPER_STATE,
+  SUPERSTATE_AS_NEXT_STATE,
+  SUPERSTATE_CONFLICT
 
-  def analyze(input: StateMachineSyntax): SemanticSyntax = {
-    syntax = new SemanticSyntax()
+final class SemanticAnalyzer {
+  var errors: ListBuffer[SemanticError] = ListBuffer.empty[SemanticError]
+
+  def analyze(input: StateMachineSyntax): ListBuffer[SemanticError] = {
+    errors = ListBuffer.empty[SemanticError]
     checkForErrors(input)
-    syntax
+    errors
   }
 
   private def checkForErrors(input: StateMachineSyntax): Unit = {
@@ -20,11 +36,11 @@ final class SemanticAnalyzer {
 
   private def checkForNoMachines(input: StateMachineSyntax): Unit =
     if (input.machines.isEmpty)
-      syntax.addError(NO_MACHINES)
+      errors += NO_MACHINES
 
   private def checkForDuplicateMachines(input: StateMachineSyntax): Unit =
     if (input.machines.map(_.name).toSet.size != input.machines.size)
-      syntax.addError(DUPLICATE_MACHINE)
+      errors += DUPLICATE_MACHINE
 
   private def analyzeMachine(input: StateMachine): Unit = {
     checkForNoInitialState(input)
@@ -35,15 +51,15 @@ final class SemanticAnalyzer {
 
   private def checkForNoInitialState(input: StateMachine): Unit =
     if (input.initialState == null)
-      syntax.addError(NO_INITIAL_STATE)
+      errors += NO_INITIAL_STATE
 
   private def checkForNoTransitions(input: StateMachine): Unit =
     if (input.states.isEmpty)
-      syntax.addError(NO_TRANSITIONS)
+      errors += NO_TRANSITIONS
 
   private def checkForUndefinedInitialState(input: StateMachine): Unit =
     if (!input.states.map(_.name).contains(input.initialState))
-      syntax.addError(UNDEFINED_INITIAL_STATE)
+      errors += UNDEFINED_INITIAL_STATE
 
   private def analyzeStates(input: List[State]): Unit = {
     checkForUndefinedNextState(input)
@@ -65,7 +81,7 @@ final class SemanticAnalyzer {
     }
 
     if (!allDefined)
-      syntax.addError(UNDEFINED_NEXT_STATE)
+      errors += UNDEFINED_NEXT_STATE
   }
 
   private def checkForUnusedStates(input: List[State]): Unit = {
@@ -78,14 +94,14 @@ final class SemanticAnalyzer {
       .toSet
 
     if (unused.nonEmpty)
-      syntax.addError(UNUSED_STATE)
+      errors += UNUSED_STATE
   }
 
   private def checkForDuplicateStates(input: List[State]): Unit = {
     val stateNames: List[String] = input.map(_.name)
 
     if (stateNames.toSet.size != input.length)
-      syntax.addError(DUPLICATE_STATE)
+      errors += DUPLICATE_STATE
   }
 
   private def checkForDuplicateTransitions(input: List[State]): Unit =
@@ -93,7 +109,7 @@ final class SemanticAnalyzer {
       val eventNames = state.events.map(_.name)
 
       if (eventNames.toSet.size != eventNames.size)
-        syntax.addError(DUPLICATE_TRANSITION)
+        errors += DUPLICATE_TRANSITION
     })
 
   private def checkForUndefinedSuperstate(input: List[State]): Unit = {
@@ -104,7 +120,7 @@ final class SemanticAnalyzer {
     input.foreach(state => {
       state.superStates.foreach(superstate => {
         if (!superstates.contains(superstate))
-          syntax.addError(UNDEFINED_SUPER_STATE)
+          errors += UNDEFINED_SUPER_STATE
       })
     })
   }
@@ -119,7 +135,7 @@ final class SemanticAnalyzer {
 
       nextStates.foreach(nextState => {
         if (superstates.contains(nextState))
-          syntax.addError(SUPERSTATE_AS_NEXT_STATE)
+          errors += SUPERSTATE_AS_NEXT_STATE
       })
     })
   }
@@ -132,7 +148,7 @@ final class SemanticAnalyzer {
       state.superStates.foreach { superstateName =>
         superstates.find(_.name == superstateName).foreach { superstate =>
           if (hasConflictingNextState(superstate, state))
-            syntax.addError(SUPERSTATE_CONFLICT)
+            errors += SUPERSTATE_CONFLICT
         }
       }
     })

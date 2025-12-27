@@ -1,30 +1,27 @@
 package smc
 
 import munit.FunSuite
+import scala.collection.mutable.ListBuffer
 import smc.semanticAnalyzer.SemanticError.*
-import smc.semanticAnalyzer.{SemanticAnalyzer, SemanticError, SemanticSyntax}
+import smc.semanticAnalyzer.{SemanticAnalyzer, SemanticError}
 import smc.syntaxAnalyzer.{Event, State, StateMachine, StateMachineSyntax}
 
 class SemanticSuite extends FunSuite {
   protected var syntax = new StateMachineSyntax()
   private val analyzer = new SemanticAnalyzer()
-  private var semanticSyntax = new SemanticSyntax()
+  private var semanticErrors: ListBuffer[SemanticError] = ListBuffer.empty
 
   override def beforeEach(context: BeforeEach): Unit =
     syntax = new StateMachineSyntax()
 
   protected def analyzeSyntax(): Unit =
-    semanticSyntax = analyzer.analyze(syntax)
+    semanticErrors = analyzer.analyze(syntax)
 
-  protected def assertPresentErrors(errors: SemanticError*): Unit = {
-    val presentErrors = semanticSyntax.errors.toSet
-    assert(errors.toSet.subsetOf(presentErrors))
-  }
+  protected def assertPresentErrors(errors: SemanticError*): Unit =
+    assert(errors.toSet.subsetOf(semanticErrors.toSet))
 
-  protected def assertNonPresentErrors(errors: SemanticError*): Unit = {
-    val commonErrors = errors.toSet.intersect(semanticSyntax.errors.toSet)
-    assert(commonErrors.isEmpty)
-  }
+  protected def assertNonPresentErrors(errors: SemanticError*): Unit =
+    assert(errors.toSet.intersect(semanticErrors.toSet).isEmpty)
 }
 
 class SemanticMachineSuite extends SemanticSuite {
