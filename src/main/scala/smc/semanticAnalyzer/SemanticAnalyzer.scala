@@ -30,6 +30,7 @@ final class SemanticAnalyzer {
     checkForNoInitialState(input)
     checkForNoTransitions(input)
     checkForUndefinedInitialState(input)
+    analyzeStates(input.states.toList)
   }
 
   private def checkForNoInitialState(input: StateMachine): Unit =
@@ -41,6 +42,37 @@ final class SemanticAnalyzer {
       syntax.addError(NO_TRANSITIONS)
 
   private def checkForUndefinedInitialState(input: StateMachine): Unit =
-    if (!input.states.contains(input.initialState))
+    if (!input.states.map(_.name).contains(input.initialState))
       syntax.addError(UNDEFINED_INITIAL_STATE)
+
+  private def analyzeStates(input: List[State]): Unit = {
+    checkForUndefinedNextState(input)
+    checkForUnusedStates(input)
+  }
+
+  private def checkForUndefinedNextState(input: List[State]): Unit = {
+    val stateNames = input.map(_.name).toSet
+
+    val allDefined = input.forall { state =>
+      state.events.forall { event =>
+        event.targetState != null && stateNames.contains(event.targetState)
+      }
+    }
+
+    if (!allDefined)
+      syntax.addError(UNDEFINED_NEXT_STATE)
+  }
+
+  private def checkForUnusedStates(input: List[State]): Unit = {
+    val isTargeted: String => Boolean =
+      name => input.exists(_.events.exists(_.targetState == name))
+
+    val unused = input
+      .map(_.name)
+      .filterNot(isTargeted)
+      .toSet
+
+    if (unused.nonEmpty)
+      syntax.addError(UNUSED_STATE)
+  }
 }
