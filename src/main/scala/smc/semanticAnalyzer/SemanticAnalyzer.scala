@@ -48,6 +48,8 @@ final class SemanticAnalyzer {
   private def analyzeStates(input: List[State]): Unit = {
     checkForUndefinedNextState(input)
     checkForUnusedStates(input)
+    checkForDuplicateStates(input)
+    checkForDuplicateTransitions(input)
   }
 
   private def checkForUndefinedNextState(input: List[State]): Unit = {
@@ -74,5 +76,20 @@ final class SemanticAnalyzer {
 
     if (unused.nonEmpty)
       syntax.addError(UNUSED_STATE)
+  }
+
+  private def checkForDuplicateStates(input: List[State]): Unit = {
+    val stateNames: List[String] = input.map(_.name)
+    if (stateNames.toSet.size != input.length)
+      syntax.addError(DUPLICATE_STATE)
+  }
+
+  private def checkForDuplicateTransitions(input: List[State]): Unit = {
+    input.foreach(state => {
+      val eventNames = state.events.map(_.name)
+
+      if (eventNames.toSet.size != eventNames.size)
+        syntax.addError(DUPLICATE_TRANSITION)
+    })
   }
 }

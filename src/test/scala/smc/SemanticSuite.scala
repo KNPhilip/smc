@@ -127,6 +127,7 @@ class SemanticStateSuite extends SemanticSuite {
     syntax.machines.last.states += new State("state")
     analyzeSyntax()
     assertPresentErrors(UNUSED_STATE)
+    assertNonPresentErrors(UNDEFINED_NEXT_STATE)
   }
 
   test("No unused states") {
@@ -140,6 +141,84 @@ class SemanticStateSuite extends SemanticSuite {
     }
 
     analyzeSyntax()
-    assertNonPresentErrors(UNUSED_STATE)
+    assertNonPresentErrors(UNUSED_STATE, UNDEFINED_NEXT_STATE)
+  }
+
+  test("Duplicate state") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_STATE)
+    assertNonPresentErrors(UNDEFINED_NEXT_STATE)
+  }
+
+  test("Non-Duplicate transitions") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(DUPLICATE_STATE, UNDEFINED_NEXT_STATE)
+  }
+}
+
+class SemanticTransitionSuite extends SemanticSuite {
+  override def beforeEach(context: BeforeEach): Unit = {
+    super.beforeEach(context)
+
+    syntax.machines += new StateMachine("Fsm") {
+      initialState = "initial"
+      states += new State("initial")
+    }
+  }
+
+  test("Same transitions are duplicate transition") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_TRANSITION)
+  }
+
+  test("Different target states under same events are still duplicates") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_TRANSITION)
+  }
+
+  test("No duplicate transitions") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(DUPLICATE_TRANSITION)
   }
 }
