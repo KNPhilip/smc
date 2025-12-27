@@ -222,3 +222,131 @@ class SemanticTransitionSuite extends SemanticSuite {
     assertNonPresentErrors(DUPLICATE_TRANSITION)
   }
 }
+
+class SemanticSuperstateSuite extends SemanticSuite {
+  override def beforeEach(context: BeforeEach): Unit = {
+    super.beforeEach(context)
+
+    syntax.machines += new StateMachine("Fsm") {
+      initialState = "initial"
+      states += new State("initial")
+    }
+  }
+
+  test("Superstate is undefined") {
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate"
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(UNDEFINED_SUPER_STATE)
+  }
+
+  test("Superstate is defined") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+    }
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate"
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(UNDEFINED_SUPER_STATE)
+  }
+
+  test("Superstates cannot be targets") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+    }
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "superstate"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(SUPERSTATE_AS_NEXT_STATE)
+  }
+
+  test("Superstates can be used as superstates") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+    }
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate"
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(UNDEFINED_SUPER_STATE, SUPERSTATE_AS_NEXT_STATE, SUPERSTATE_CONFLICT)
+  }
+
+  test("Conflicting destination between events in a state and a superstate") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate"
+      events += new Event("event") {
+        targetState = "target"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(SUPERSTATE_CONFLICT)
+  }
+
+  test("Still finds conflicting superstates when multiple superstates are in scope") {
+    syntax.machines.last.states += new State("superstate1") {
+      isSuperState = true
+      events += new Event("event1") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("superstate2") {
+      isSuperState = true
+      events += new Event("event2") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate1"
+      superStates += "superstate2"
+      events += new Event("event2") {
+        targetState = "target"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(SUPERSTATE_CONFLICT)
+  }
+
+  test("Identical transition in superstate is not a conflict") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state") {
+      superStates += "superstate"
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(SUPERSTATE_CONFLICT)
+  }
+}
