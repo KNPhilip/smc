@@ -346,4 +346,138 @@ class SemanticSuperstateSuite extends SemanticSuite {
     analyzeSyntax()
     assertNonPresentErrors(SUPERSTATE_CONFLICT)
   }
+
+  test("Inherited duplicate transition is detected") {
+    syntax.machines.last.states += new State("superstate") {
+      isSuperState = true
+      events += new Event("reset") {
+        targetState = "foo"
+      }
+    }
+    syntax.machines.last.states += new State("initial") {
+      superStates += "superstate"
+      events += new Event("reset") {
+        targetState = "bar"
+      }
+    }
+    syntax.machines.last.states += new State("foo")
+    syntax.machines.last.states += new State("bar")
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_TRANSITION)
+  }
+}
+
+class SemanticHappyPathSuite extends SemanticSuite {
+  private def assertNoErrors(): Unit = {
+    assertNonPresentErrors(
+      NO_MACHINES,
+      DUPLICATE_MACHINE,
+      NO_INITIAL_STATE,
+      NO_TRANSITIONS,
+      UNDEFINED_INITIAL_STATE,
+      UNDEFINED_NEXT_STATE,
+      UNUSED_STATE,
+      DUPLICATE_STATE,
+      DUPLICATE_TRANSITION,
+      UNDEFINED_SUPER_STATE,
+      SUPERSTATE_AS_NEXT_STATE,
+      SUPERSTATE_CONFLICT)
+  }
+
+  test("Sample coffee machine FSM is semantically correct") {
+    syntax.machines += new StateMachine("CoffeeMachine") {
+      initialState = "Selecting"
+      states += new State("Selecting") {
+        events += new Event("ChooseDrink") {
+          targetState = "Brewing"
+        }
+      }
+      states += new State("Brewing") {
+        events += new Event("Finish") {
+          targetState = "Selecting"
+          actions += "dispenseCup"
+        }
+      }
+    }
+    analyzeSyntax()
+    assertNoErrors()
+  }
+
+  test("More complicated sample coffee machine FSM is semantically correct") {
+    syntax.machines += new StateMachine("CoffeeMachine") {
+      initialState = "Selecting"
+      states += new State("Operational") {
+        isSuperState = true
+        events += new Event("PowerOutage") {
+          targetState = "Off"
+        }
+      }
+      states += new State("Selecting") {
+        superStates += "Operational"
+        entryActions += "DisplayMenu"
+        events += new Event("ChooseDrink") {
+          targetState = "Brewing"
+        }
+        events += new Event("NoMoreCoffee") {
+          targetState = "Selecting"
+        }
+      }
+      states += new State("Brewing") {
+        superStates += "Operational"
+        entryActions += "StartHeating"
+        exitActions += "StopHeating"
+        events += new Event("Finish") {
+          targetState = "Selecting"
+          actions += "dispenseCup"
+        }
+      }
+      states += new State("Off") {
+        entryActions += "PowerDownComponents"
+        events += new Event("PowerRestored") {
+          targetState = "Selecting"
+        }
+      }
+    }
+    analyzeSyntax()
+    assertNoErrors()
+  }
+
+  test("Printer sample FSM is semantically correct") {
+    syntax.machines += new StateMachine("Printer") {
+      initialState = "Idle"
+      states += new State("Operational") {
+        isSuperState = true
+        events += new Event("PowerLoss") {
+          targetState = "Offline"
+        }
+      }
+      states += new State("Idle") {
+        superStates += "Operational"
+        events += new Event("Print") {
+          targetState = "Printing"
+        }
+        events += new Event("Cancel") {
+          targetState = "Idle"
+          actions += "logCancelWithoutJob"
+          actions += "beep"
+        }
+      }
+      states += new State("Printing") {
+        superStates += "Operational"
+        events += new Event("Finish") {
+          targetState = "Idle"
+          actions += "ejectPage"
+        }
+      }
+      states += new State("Offline") {
+        entryActions += "PowerDown"
+        events += new Event("PowerRestored") {
+          targetState = "Idle"
+        }
+      }
+    }
+    analyzeSyntax()
+    assertNoErrors()
+  }
 }

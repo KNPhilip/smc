@@ -46,7 +46,7 @@ final class SemanticAnalyzer {
     checkForNoInitialState(input)
     checkForNoTransitions(input)
     checkForUndefinedInitialState(input)
-    analyzeStates(input.states.toList)
+    analyzeStates(input.states.toList, input.initialState)
   }
 
   private def checkForNoInitialState(input: StateMachine): Unit =
@@ -61,56 +61,15 @@ final class SemanticAnalyzer {
     if (!input.states.map(_.name).contains(input.initialState))
       errors += UNDEFINED_INITIAL_STATE
 
-  private def analyzeStates(input: List[State]): Unit = {
-    checkForUndefinedNextState(input)
-    checkForUnusedStates(input)
-    checkForDuplicateStates(input)
-    checkForDuplicateTransitions(input)
+  private def analyzeStates(input: List[State], initialState: String): Unit = {
     checkForUndefinedSuperstate(input)
     checkForSuperstatesAsNextState(input)
     checkForConflictInSuperstate(input)
+    checkForUndefinedNextState(input)
+    checkForDuplicateStates(input)
+    checkForDuplicateTransitions(input)
+    checkForUnusedStates(input, initialState)
   }
-
-  private def checkForUndefinedNextState(input: List[State]): Unit = {
-    val stateNames = input.map(_.name).toSet
-
-    val allDefined = input.forall { state =>
-      state.events.forall { event =>
-        event.targetState != null && stateNames.contains(event.targetState)
-      }
-    }
-
-    if (!allDefined)
-      errors += UNDEFINED_NEXT_STATE
-  }
-
-  private def checkForUnusedStates(input: List[State]): Unit = {
-    val isTargeted: String => Boolean =
-      name => input.exists(_.events.exists(_.targetState == name))
-
-    val unused = input
-      .map(_.name)
-      .filterNot(isTargeted)
-      .toSet
-
-    if (unused.nonEmpty)
-      errors += UNUSED_STATE
-  }
-
-  private def checkForDuplicateStates(input: List[State]): Unit = {
-    val stateNames: List[String] = input.map(_.name)
-
-    if (stateNames.toSet.size != input.length)
-      errors += DUPLICATE_STATE
-  }
-
-  private def checkForDuplicateTransitions(input: List[State]): Unit =
-    input.foreach(state => {
-      val eventNames = state.events.map(_.name)
-
-      if (eventNames.toSet.size != eventNames.size)
-        errors += DUPLICATE_TRANSITION
-    })
 
   private def checkForUndefinedSuperstate(input: List[State]): Unit = {
     val superstates: List[String] = input
@@ -169,5 +128,61 @@ final class SemanticAnalyzer {
           false
       }
     }
+  }
+
+  private def checkForUndefinedNextState(input: List[State]): Unit = {
+    val stateNames = input.map(_.name).toSet
+
+    val allDefined = input.forall { state =>
+      state.events.forall { event =>
+        event.targetState != null && stateNames.contains(event.targetState)
+      }
+    }
+
+    if (!allDefined)
+      errors += UNDEFINED_NEXT_STATE
+  }
+
+  private def checkForDuplicateStates(input: List[State]): Unit = {
+    val stateNames: List[String] = input.map(_.name)
+
+    if (stateNames.toSet.size != input.length)
+      errors += DUPLICATE_STATE
+  }
+
+  private def checkForDuplicateTransitions(states: List[State]): Unit = {
+    val superstates: Map[String, State] = states
+      .filter(_.isSuperState)
+      .map(s => s.name -> s)
+      .toMap
+
+    states.foreach { state =>
+      val inheritedEvents: List[String] = state.superStates.toList.flatMap { superName =>
+        superstates.get(superName)
+          .map(_.events.toList.map(_.name))
+          .getOrElse(Nil)
+      }
+      val allEventNames: List[String] = state.events.toList.map(_.name) ++ inheritedEvents
+
+      if (allEventNames.toSet.size != allEventNames.size)
+        errors += DUPLICATE_TRANSITION
+    }
+  }
+
+  private def checkForUnusedStates(states: List[State], initialState: String): Unit = {
+    val stateNames = states.map(_.name).toSet
+    val explicitlyTargeted: Set[String] = states
+      .flatMap(_.events.map(_.targetState))
+      .filter(_ != null)
+      .toSet
+
+    val superstatesWithChildren: Set[String] =
+      states.flatMap(_.superStates).toSet
+
+    val unused = stateNames.diff(
+      explicitlyTargeted ++ superstatesWithChildren ++ Option(initialState).toSet)
+
+    if (unused.nonEmpty)
+      errors += UNUSED_STATE
   }
 }
