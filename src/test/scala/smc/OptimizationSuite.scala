@@ -562,3 +562,153 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
     assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
   }
 }
+
+class HappyPathOptimizerSuite extends OptimizationSuite {
+  private def assertTransition(transition: OptimizedTransition, state: String, event: String,
+                               nextState: String, actions: ListBuffer[String]): Unit = {
+    assertEquals(transition.currentState, state)
+    assertEquals(transition.subTransitions.head.event, event)
+    assertEquals(transition.subTransitions.head.nextState, nextState)
+    assertEquals(transition.subTransitions.head.actions, actions)
+  }
+
+  test("Optimized sample coffee machine FSM") {
+    syntax.machines += new StateMachine("CoffeeMachine") {
+      initialState = "Selecting"
+      states += new State("Selecting") {
+        events += new Event("ChooseDrink") {
+          targetState = "Brewing"
+        }
+      }
+      states += new State("Brewing") {
+        events += new Event("Finish") {
+          targetState = "Selecting"
+          actions += "dispenseCup"
+        }
+      }
+    }
+
+    val machine = optimize().head
+    assertEquals(machine.name, "CoffeeMachine")
+    assertEquals(machine.initialState, "Selecting")
+    assertTransition(machine.transitions.head, "Selecting", "ChooseDrink", "Brewing", ListBuffer.empty)
+    assertTransition(machine.transitions.last, "Brewing", "Finish", "Selecting", ListBuffer("dispenseCup"))
+  }
+
+  test("Optimized more complicated sample coffee machine FSM") {
+    syntax.machines += new StateMachine("CoffeeMachine") {
+      initialState = "Selecting"
+      states += new State("Operational") {
+        isSuperState = true
+        events += new Event("PowerOutage") {
+          targetState = "Off"
+        }
+      }
+      states += new State("Selecting") {
+        superStates += "Operational"
+        entryActions += "DisplayMenu"
+        events += new Event("ChooseDrink") {
+          targetState = "Brewing"
+        }
+        events += new Event("NoMoreCoffee") {
+          targetState = "Selecting"
+        }
+      }
+      states += new State("Brewing") {
+        superStates += "Operational"
+        entryActions += "StartHeating"
+        exitActions += "StopHeating"
+        events += new Event("Finish") {
+          targetState = "Selecting"
+          actions += "dispenseCup"
+        }
+      }
+      states += new State("Off") {
+        entryActions += "PowerDownComponents"
+        events += new Event("PowerRestored") {
+          targetState = "Selecting"
+        }
+      }
+    }
+
+    val machine = optimize().head
+    assertEquals(machine.name, "CoffeeMachine")
+    assertEquals(machine.initialState, "Selecting")
+
+    assertEquals(machine.transitions.head.currentState, "Selecting")
+    assertEquals(machine.transitions.head.subTransitions.map(_.event),
+      ListBuffer("ChooseDrink", "NoMoreCoffee", "PowerOutage"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.nextState),
+      ListBuffer("Brewing", "Selecting", "Off"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("StartHeating"), ListBuffer.empty, ListBuffer("PowerDownComponents")))
+
+    assertEquals(machine.transitions(1).currentState, "Brewing")
+    assertEquals(machine.transitions(1).subTransitions.map(_.event),
+      ListBuffer("Finish", "PowerOutage"))
+    assertEquals(machine.transitions(1).subTransitions.map(_.nextState),
+      ListBuffer("Selecting", "Off"))
+    assertEquals(machine.transitions(1).subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("StopHeating", "DisplayMenu", "dispenseCup"), ListBuffer("StopHeating", "PowerDownComponents")))
+
+    assertTransition(machine.transitions.last, "Off", "PowerRestored", "Selecting", ListBuffer("DisplayMenu"))
+  }
+
+  test("Optimized printer sample FSM") {
+    syntax.machines += new StateMachine("Printer") {
+      initialState = "Idle"
+      states += new State("Operational") {
+        isSuperState = true
+        events += new Event("PowerLoss") {
+          targetState = "Offline"
+        }
+      }
+      states += new State("Idle") {
+        superStates += "Operational"
+        events += new Event("Print") {
+          targetState = "Printing"
+        }
+        events += new Event("Cancel") {
+          targetState = "Idle"
+          actions += "logCancelWithoutJob"
+          actions += "beep"
+        }
+      }
+      states += new State("Printing") {
+        superStates += "Operational"
+        events += new Event("Finish") {
+          targetState = "Idle"
+          actions += "ejectPage"
+        }
+      }
+      states += new State("Offline") {
+        entryActions += "PowerDown"
+        events += new Event("PowerRestored") {
+          targetState = "Idle"
+        }
+      }
+    }
+
+    val machine = optimize().head
+    assertEquals(machine.name, "Printer")
+    assertEquals(machine.initialState, "Idle")
+
+    assertEquals(machine.transitions.head.currentState, "Idle")
+    assertEquals(machine.transitions.head.subTransitions.map(_.event),
+      ListBuffer("Print", "Cancel", "PowerLoss"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.nextState),
+      ListBuffer("Printing", "Idle", "Offline"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.actions), ListBuffer(
+      ListBuffer.empty, ListBuffer("logCancelWithoutJob", "beep"), ListBuffer("PowerDown")))
+
+    assertEquals(machine.transitions(1).currentState, "Printing")
+    assertEquals(machine.transitions(1).subTransitions.map(_.event),
+      ListBuffer("Finish", "PowerLoss"))
+    assertEquals(machine.transitions(1).subTransitions.map(_.nextState),
+      ListBuffer("Idle", "Offline"))
+    assertEquals(machine.transitions(1).subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("ejectPage"), ListBuffer("PowerDown")))
+
+    assertTransition(machine.transitions.last, "Offline", "PowerRestored", "Idle", ListBuffer.empty)
+  }
+}
