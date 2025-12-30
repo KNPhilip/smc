@@ -6,10 +6,12 @@ import smc.syntaxAnalyzer.{StateMachine, State, Event}
 final class Optimizer {
   def optimize(machine: StateMachine): OptimizedStateMachine = {
     val optimized = new OptimizedStateMachine(machine.name, machine.initialState)
+
     addStates(machine, optimized)
     addEvents(machine, optimized)
     addActions(machine, optimized)
     addTransitions(machine, optimized)
+
     optimized
   }
 

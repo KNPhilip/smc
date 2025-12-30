@@ -321,3 +321,244 @@ class EntryAndExitTransitionOptimizerSuite extends OptimizationSuite {
       "entryState", "event", "exitState", ListBuffer.empty)
   }
 }
+
+class SuperstateOptimizerSuite extends OptimizationSuite {
+  override def beforeEach(context: BeforeEach): Unit =
+    syntax = new StateMachineSyntax() {
+      machines += new StateMachine("machine")
+    }
+
+  private def assertTransition(transition: OptimizedTransition, state: String, event: String,
+                               nextState: String, actions: ListBuffer[String]): Unit = {
+    assertEquals(transition.currentState, state)
+    assertEquals(transition.subTransitions.head.event, event)
+    assertEquals(transition.subTransitions.head.nextState, nextState)
+    assertEquals(transition.subTransitions.head.actions, actions)
+  }
+
+  private def assertLastTransition(transition: OptimizedTransition, state: String, event: String,
+                               nextState: String, actions: ListBuffer[String]): Unit = {
+    assertEquals(transition.currentState, state)
+    assertEquals(transition.subTransitions.last.event, event)
+    assertEquals(transition.subTransitions.last.nextState, nextState)
+    assertEquals(transition.subTransitions.last.actions, actions)
+  }
+
+  test("Simple inheritance of transitions") {
+    syntax.machines.last.states += new State("super") {
+      isSuperState = true
+      events += new Event("superEvent") {
+        targetState = "state2"
+        actions += "superAction"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+    assertTransition(machine.transitions.head, "state1", "event", "state2", ListBuffer("action"))
+    assertLastTransition(machine.transitions.head, "state1", "superEvent", "state2", ListBuffer("superAction"))
+    assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
+  }
+
+  test("Complicated inheritance of transitions") {
+    syntax.machines.last.states += new State("super1") {
+      isSuperState = true
+      events += new Event("superEvent1") {
+        targetState = "state1"
+        actions += "superAction1"
+      }
+      events += new Event("superEvent2") {
+        targetState = "state2"
+        actions += "superAction2"
+      }
+    }
+    syntax.machines.last.states += new State("super2") {
+      isSuperState = true
+      superStates += "super1"
+      events += new Event("superEvent") {
+        targetState = "state2"
+        actions += "superAction"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super2"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+
+    assertEquals(machine.transitions.head.currentState, "state1")
+    assertEquals(machine.transitions.head.subTransitions.map(_.event),
+      ListBuffer("event", "superEvent", "superEvent1", "superEvent2"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("action"), ListBuffer("superAction"), ListBuffer("superAction1"), ListBuffer("superAction2")))
+
+    assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
+  }
+
+  test("Multiple inheritance of transitions") {
+    syntax.machines.last.states += new State("super1") {
+      isSuperState = true
+      events += new Event("superEvent1") {
+        targetState = "state2"
+        actions += "superAction1"
+      }
+    }
+    syntax.machines.last.states += new State("super2") {
+      isSuperState = true
+      events += new Event("superEvent2") {
+        targetState = "state2"
+        actions += "superAction2"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super1"
+      superStates += "super2"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+
+    assertEquals(machine.transitions.head.currentState, "state1")
+    assertEquals(machine.transitions.head.subTransitions.map(_.event),
+      ListBuffer("event", "superEvent1", "superEvent2"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("action"), ListBuffer("superAction1"), ListBuffer("superAction2")))
+
+    assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
+  }
+
+  test("Diamond of death inheritance of transitions") {
+    syntax.machines.last.states += new State("superRoot") {
+      isSuperState = true
+      events += new Event("rootEvent") {
+        targetState = "state2"
+        actions += "rootAction"
+      }
+    }
+    syntax.machines.last.states += new State("super1") {
+      isSuperState = true
+      superStates += "superRoot"
+      events += new Event("event1") {
+        targetState = "state2"
+        actions += "action1"
+      }
+    }
+    syntax.machines.last.states += new State("super2") {
+      isSuperState = true
+      superStates += "superRoot"
+      events += new Event("event2") {
+        targetState = "state2"
+        actions += "action2"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super1"
+      superStates += "super2"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+
+    assertEquals(machine.transitions.head.currentState, "state1")
+    assertEquals(machine.transitions.head.subTransitions.map(_.event),
+      ListBuffer("event", "event1", "rootEvent", "event2"))
+    assertEquals(machine.transitions.head.subTransitions.map(_.actions), ListBuffer(
+      ListBuffer("action"), ListBuffer("action1"), ListBuffer("rootAction"), ListBuffer("action2")))
+
+    assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
+  }
+
+  test("Overriding transitions") {
+    syntax.machines.last.states += new State("super") {
+      isSuperState = true
+      events += new Event("event") {
+        targetState = "state3"
+        actions += "action1"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action2"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+    syntax.machines.last.states += new State("state3") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+    assertTransition(machine.transitions.head, "state1", "event", "state2", ListBuffer("action2"))
+    assertTransition(machine.transitions(1), "state2", "event", "state1", ListBuffer.empty)
+    assertTransition(machine.transitions(2), "state3", "event", "state1", ListBuffer.empty)
+  }
+
+  test("Get rid of duplicate transitions") {
+    syntax.machines.last.states += new State("super") {
+      isSuperState = true
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state1") {
+      superStates += "super"
+      events += new Event("event") {
+        targetState = "state2"
+        actions += "action"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event") {
+        targetState = "state1"
+      }
+    }
+
+    val machine = optimize().head
+    assertTransition(machine.transitions.head, "state1", "event", "state2", ListBuffer("action"))
+    assertTransition(machine.transitions.last, "state2", "event", "state1", ListBuffer.empty)
+  }
+}
