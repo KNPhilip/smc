@@ -2,7 +2,7 @@ package smc.generators.nsc
 
 import smc.optimizer.{OptimizedStateMachine, OptimizedTransition, OptimizedSubTransition}
 
-final class NscNodeFactory {
+object NscNodeFactory {
   def generate(sm: OptimizedStateMachine): NscNode = {
     val eventDelegators = EventDelegatorsNode(sm.events.toList)
     val stateProperty = StatePropertyNode(sm.initialState)
