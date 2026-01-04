@@ -42,8 +42,6 @@ abstract class DummyNscVisitor extends NscNodeVisitor {
     node.stateProperty.accept(this)
     node.handleEvent.accept(this)
   }
-
-  override def writeFiles(path: String, fileName: String): Unit = ()
 }
 
 final class TestVisitor(out: String => Unit) extends DummyNscVisitor {
