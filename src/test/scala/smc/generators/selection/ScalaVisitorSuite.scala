@@ -2,8 +2,7 @@ package smc.generators.selection
 
 import munit.FunSuite
 import smc.optimizer.OptimizedStateMachine
-import smc.generators.OptimizedBuilder.*
-import smc.generators.selection.SelectionNodeFactory
+import smc.generators.OptimizedBuilder._
 import smc.generators.selection.visitors.ScalaVisitor
 
 final class ScalaVisitorSuite extends FunSuite {

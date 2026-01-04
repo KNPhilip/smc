@@ -17,10 +17,10 @@ object SelectionNodeFactory {
       delegators    = eventDelegators,
       eventEnum     = eventEnum,
       stateEnum     = stateEnum,
-      stateProperty= stateProperty,
-      handleEvent  = handleEvent,
-      actions      = sm.actions.toList,
-      states       = sm.states.toList
+      stateProperty = stateProperty,
+      handleEvent   = handleEvent,
+      actions       = sm.actions.toList,
+      states        = sm.states.toList
     )
   }
 
@@ -53,7 +53,7 @@ object SelectionNodeFactory {
   }
 
   private def buildSetStateNode(stateName: String): FunctionCallNode = {
-    val enumerator = EnumeratorNode("State", stateName)
-    FunctionCallNode(functionName = "setState", argument = Some(enumerator))
+    val nextStateNode = NextStateNode(stateName)
+    FunctionCallNode(functionName = "setState", argument = Some(nextStateNode))
   }
 }

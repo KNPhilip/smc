@@ -29,7 +29,7 @@ abstract class DummyNscVisitor extends SelectionNodeVisitor {
   override def visit(node: DefaultCaseNode): Unit = ()
   override def visit(node: FunctionCallNode): Unit = ()
   override def visit(node: EnumNode): Unit = ()
-  override def visit(node: EnumeratorNode): Unit = ()
+  override def visit(node: NextStateNode): Unit = ()
   override def visit(node: StatePropertyNode): Unit = ()
   override def visit(node: EventDelegatorsNode): Unit = ()
 
@@ -66,8 +66,8 @@ final class TestVisitor(out: String => Unit) extends DummyNscVisitor {
     out(") ")
   }
 
-  override def visit(node: EnumeratorNode): Unit =
-    out(s"${node.enumeration}.${node.enumerator}")
+  override def visit(node: NextStateNode): Unit =
+    out(s"State.${node.nextState}")
 
   override def visit(node: DefaultCaseNode): Unit =
     out(s" default(${node.state});")

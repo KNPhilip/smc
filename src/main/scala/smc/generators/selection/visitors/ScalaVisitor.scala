@@ -1,99 +1,100 @@
 package smc.generators.selection.visitors
 
+import smc.generators.selection._
+
 import java.io.IOException
 import java.nio.file.{FileSystems, Files}
-import smc.generators.selection._
 
 final class ScalaVisitor extends SelectionNodeVisitor {
   private val output = new StringBuilder
   private var states: List[String] = List.empty
 
-  override def visit(switchCaseNode: SwitchCaseNode): Unit = {
-    if (switchCaseNode.variableName == "state") {
-      output.append(s"${indent(2)}${switchCaseNode.variableName} match {\n")
-      switchCaseNode.generateCases(this)
-      output.append(s"${indent(2)}}\n")
-    } else {
-      output.append(s"${indent(4)}${switchCaseNode.variableName} match {\n")
-      switchCaseNode.generateCases(this)
-      output.append(s"${indent(4)}}\n")
-    }
+  override def visit(node: FsmClassNode): Unit = {
+    val actionsName = node.actionsName
+    if (actionsName == null)
+      output.append(s"abstract class ${node.className} {\n")
+    else
+      output.append(s"abstract class ${node.className} extends $actionsName {\n")
+
+    output.append(s"${indent(1)}def unhandledTransition(state: String, event: String): Unit\n\n")
+
+    if (actionsName == null)
+      node.actions.foreach { action =>
+        output.append(s"${indent(1)}protected def $action(): Unit\n\n")
+      }
+
+    states = node.stateEnum.enumerators
+    node.delegators.accept(this)
+    node.stateProperty.accept(this)
+    node.handleEvent.accept(this)
+    node.stateEnum.accept(this)
+    node.eventEnum.accept(this)
+
+    output.append("}\n")
   }
 
-  override def visit(caseNode: CaseNode): Unit = {
-    if (states.contains(caseNode.caseName)) {
-      output.append(s"${indent(3)}case State.${caseNode.caseName} =>\n")
-    } else {
-      output.append(s"${indent(5)}case Event.${caseNode.caseName} =>\n")
-    }
-    caseNode.caseActionNode.foreach(_.accept(this))
-  }
-
-  override def visit(defaultCaseNode: DefaultCaseNode): Unit =
-    output.append(s"${indent(5)}case _ => unhandledTransition(state.toString, event.toString)\n")
-
-  override def visit(functionCallNode: FunctionCallNode): Unit = {
-    output.append(s"${indent(6)}${functionCallNode.functionName}(")
-
-    if (functionCallNode.argument != null)
-      functionCallNode.argument.foreach(_.accept(this))
-
-    output.append(")\n")
-  }
-
-  override def visit(enumNode: EnumNode): Unit =
-    output.append(
-      s"\n${indent(1)}private enum ${enumNode.name}:\n" +
-      s"${indent(2)}case\n" +
-      s"${indent(2)}" +
-      s"${enumNode.enumerators.mkString(s",\n${indent(2)}")}\n")
-
-  override def visit(enumeratorNode: EnumeratorNode): Unit =
-    output.append(s"${enumeratorNode.enumeration}.${enumeratorNode.enumerator}")
-
-  override def visit(statePropertyNode: StatePropertyNode): Unit = {
-    output.append(s"${indent(1)}private var state: State = State.${statePropertyNode.initialState}\n\n")
-    output.append(
-      s"${indent(1)}private def setState(s: State): Unit =\n" +
-      s"${indent(2)}state = s\n\n")
-  }
-
-  override def visit(eventDelegatorsNode: EventDelegatorsNode): Unit =
-    eventDelegatorsNode.events.foreach { event =>
+  override def visit(node: EventDelegatorsNode): Unit =
+    node.events.foreach { event =>
       output.append(
         s"${indent(1)}def $event(): Unit =\n" +
         s"${indent(2)}handleEvent(Event.$event)\n\n")
     }
 
-  override def visit(handleEventNode: HandleEventNode): Unit = {
+  override def visit(node: StatePropertyNode): Unit = {
+    output.append(s"${indent(1)}private var state: State = State.${node.initialState}\n\n")
+    output.append(
+      s"${indent(1)}private def setState(s: State): Unit =\n" +
+      s"${indent(2)}state = s\n\n")
+  }
+
+  override def visit(node: HandleEventNode): Unit = {
     output.append(s"${indent(1)}private def handleEvent(event: Event): Unit = {\n")
-    handleEventNode.switchCase.accept(this)
+    node.switchCase.accept(this)
     output.append(s"${indent(1)}}\n")
   }
 
-  override def visit(fsmClassNode: FsmClassNode): Unit = {
-    val actionsName = fsmClassNode.actionsName
-    if (actionsName == null)
-      output.append(s"abstract class ${fsmClassNode.className} {\n")
-    else
-      output.append(s"abstract class ${fsmClassNode.className} extends $actionsName {\n")
-
-    output.append(s"${indent(1)}def unhandledTransition(state: String, event: String): Unit\n\n")
-
-    if (actionsName == null)
-      fsmClassNode.actions.foreach { action =>
-        output.append(s"${indent(1)}protected def $action(): Unit\n\n")
-      }
-
-    states = fsmClassNode.stateEnum.enumerators
-    fsmClassNode.delegators.accept(this)
-    fsmClassNode.stateProperty.accept(this)
-    fsmClassNode.handleEvent.accept(this)
-    fsmClassNode.stateEnum.accept(this)
-    fsmClassNode.eventEnum.accept(this)
-
-    output.append("}\n")
+  override def visit(node: SwitchCaseNode): Unit = {
+    if (node.variableName == "state") {
+      output.append(s"${indent(2)}${node.variableName} match {\n")
+      node.generateCases(this)
+      output.append(s"${indent(2)}}\n")
+    } else {
+      output.append(s"${indent(4)}${node.variableName} match {\n")
+      node.generateCases(this)
+      output.append(s"${indent(4)}}\n")
+    }
   }
+
+  override def visit(node: CaseNode): Unit = {
+    if (states.contains(node.caseName)) {
+      output.append(s"${indent(3)}case State.${node.caseName} =>\n")
+    } else {
+      output.append(s"${indent(5)}case Event.${node.caseName} =>\n")
+    }
+    node.caseActionNode.foreach(_.accept(this))
+  }
+
+  override def visit(node: FunctionCallNode): Unit = {
+    output.append(s"${indent(6)}${node.functionName}(")
+
+    if (node.argument != null)
+      node.argument.foreach(_.accept(this))
+
+    output.append(")\n")
+  }
+
+  override def visit(node: NextStateNode): Unit =
+    output.append(s"State.${node.nextState}")
+
+  override def visit(node: DefaultCaseNode): Unit =
+    output.append(s"${indent(5)}case _ => unhandledTransition(state.toString, event.toString)\n")
+
+  override def visit(node: EnumNode): Unit =
+    output.append(
+      s"\n${indent(1)}private enum ${node.name}:\n" +
+        s"${indent(2)}case\n" +
+        s"${indent(2)}" +
+        s"${node.enumerators.mkString(s",\n${indent(2)}")}\n")
 
   @throws[IOException]
   def writeFiles(path: String, fileName: String): Unit = {

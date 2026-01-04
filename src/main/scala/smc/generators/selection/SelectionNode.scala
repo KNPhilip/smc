@@ -4,6 +4,15 @@ sealed trait SelectionNode {
   def accept(visitor: SelectionNodeVisitor): Unit
 }
 
+final case class FsmClassNode(className: String, actionsName: String,
+                              delegators: EventDelegatorsNode, eventEnum: EnumNode,
+                              stateEnum: EnumNode, stateProperty: StatePropertyNode,
+                              handleEvent: HandleEventNode, actions: List[String],
+                              states: List[String]) extends SelectionNode {
+  override def accept(visitor: SelectionNodeVisitor): Unit =
+    visitor.visit(this)
+}
+
 final case class SwitchCaseNode(variableName: String,
                                 caseNodes: List[SelectionNode] = Nil
                                ) extends SelectionNode {
@@ -47,9 +56,7 @@ final case class EnumNode(name: String, enumerators: List[String]
     visitor.visit(this)
 }
 
-final case class EnumeratorNode(enumeration: String,
-                                enumerator: String
-                               ) extends SelectionNode {
+final case class NextStateNode(nextState: String) extends SelectionNode {
   override def accept(visitor: SelectionNodeVisitor): Unit =
     visitor.visit(this)
 }
@@ -65,15 +72,6 @@ final case class EventDelegatorsNode(events: List[String]) extends SelectionNode
 }
 
 final case class HandleEventNode(switchCase: SwitchCaseNode) extends SelectionNode {
-  override def accept(visitor: SelectionNodeVisitor): Unit =
-    visitor.visit(this)
-}
-
-final case class FsmClassNode(className: String, actionsName: String,
-                              delegators: EventDelegatorsNode, eventEnum: EnumNode,
-                              stateEnum: EnumNode, stateProperty: StatePropertyNode,
-                              handleEvent: HandleEventNode, actions: List[String],
-                              states: List[String]) extends SelectionNode {
   override def accept(visitor: SelectionNodeVisitor): Unit =
     visitor.visit(this)
 }
