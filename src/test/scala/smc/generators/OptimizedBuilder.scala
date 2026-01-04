@@ -24,5 +24,5 @@ object OptimizedBuilder {
   }
 
   def sub(event: String, next: String, actions: String*): OptimizedSubTransition =
-    new OptimizedSubTransition(event, next, ListBuffer(actions: _*))
+    new OptimizedSubTransition(event, next, ListBuffer(actions*))
 }

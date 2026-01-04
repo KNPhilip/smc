@@ -16,7 +16,7 @@ object Main {
     private var outputPath: String = ""
 
     @main
-    def main(args: String*): Unit = {
+    def entrypoint(args: String*): Unit = {
         try {
             parseArguments(args.toList)
             val sourceCode = new String(Files.readAllBytes(Paths.get(inputPath)))

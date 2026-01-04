@@ -1,12 +1,12 @@
 package smc.generators.selection
 
 import munit.FunSuite
+import scala.compiletime.uninitialized
 import smc.generators.OptimizedBuilder._
-import smc.generators.selection._
 import smc.optimizer.{OptimizedStateMachine, OptimizedSubTransition, OptimizedTransition}
 
 abstract class SelectionFactorySuite extends FunSuite {
-  protected var visitor: SelectionNodeVisitor = _
+  protected var visitor: SelectionNodeVisitor = uninitialized
   protected val output = new StringBuilder
 
   override def beforeEach(context: BeforeEach): Unit = {
