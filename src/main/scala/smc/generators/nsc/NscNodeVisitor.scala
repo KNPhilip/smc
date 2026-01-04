@@ -11,4 +11,5 @@ trait NscNodeVisitor {
   def visit(node: EventDelegatorsNode): Unit
   def visit(node: HandleEventNode): Unit
   def visit(node: FsmClassNode): Unit
+  def writeFiles(path: String, fileName: String): Unit
 }

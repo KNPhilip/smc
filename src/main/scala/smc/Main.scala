@@ -1,11 +1,13 @@
 package smc
 
+import smc.lexicalAnalyzer.LexicalAnalyzer
+import smc.syntaxAnalyzer.SyntacticalAnalyzer
+import smc.semanticAnalyzer.SemanticAnalyzer
+import smc.optimizer.Optimizer
+import smc.generators.CodeGeneratorFactory
+
 import java.io.IOException
 import java.nio.file.{Files, Paths}
-import smc.lexicalAnalyzer.LexicalAnalyzer
-import smc.optimizer.Optimizer
-import smc.semanticAnalyzer.SemanticAnalyzer
-import smc.syntaxAnalyzer.SyntacticalAnalyzer
 
 object Main {
     private var language: String = "Scala"
@@ -28,10 +30,13 @@ object Main {
     }
 
     private def parseArguments(args: List[String]): Unit = {
-        language = ""
-        strategy = ""
-        inputPath = ""
-        outputPath = ""
+        val argParser = new ArgumentParser(args)
+        argParser.run()
+
+        language = argParser.language
+        strategy = argParser.strategy
+        inputPath = argParser.inputPath
+        outputPath = argParser.outputPath
     }
 
     private def compile(sourceCode: String): Unit = {
@@ -43,7 +48,8 @@ object Main {
 
         if (errors.isEmpty) {
             val optimizedMachine = new Optimizer().optimize(machine.machines.head)
-            // Generate code here based on strategy, language, etc.
+            val generator = CodeGeneratorFactory.create(language, strategy, outputPath)
+            generator.generate(optimizedMachine)
         }
     }
 }
