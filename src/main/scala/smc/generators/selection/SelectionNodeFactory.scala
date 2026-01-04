@@ -13,7 +13,6 @@ object SelectionNodeFactory {
 
     FsmClassNode(
       className     = sm.name,
-      actionsName   = null,
       delegators    = eventDelegators,
       eventEnum     = eventEnum,
       stateEnum     = stateEnum,

@@ -10,18 +10,12 @@ final class ScalaVisitor extends SelectionNodeVisitor {
   private var states: List[String] = List.empty
 
   override def visit(node: FsmClassNode): Unit = {
-    val actionsName = node.actionsName
-    if (actionsName == null)
-      output.append(s"abstract class ${node.className} {\n")
-    else
-      output.append(s"abstract class ${node.className} extends $actionsName {\n")
-
+    output.append(s"abstract class ${node.className} {\n")
     output.append(s"${indent(1)}def unhandledTransition(state: String, event: String): Unit\n\n")
 
-    if (actionsName == null)
-      node.actions.foreach { action =>
-        output.append(s"${indent(1)}protected def $action(): Unit\n\n")
-      }
+    node.actions.foreach { action =>
+      output.append(s"${indent(1)}protected def $action(): Unit\n\n")
+    }
 
     states = node.stateEnum.enumerators
     node.delegators.accept(this)

@@ -104,7 +104,7 @@ final class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: EventDelegatorsNode): Unit = out("d ")
   override def visit(node: HandleEventNode): Unit = out("he ")
   override def visit(node: FsmClassNode): Unit = {
-    out(s"class ${node.className}:${node.actionsName} {")
+    out(s"class ${node.className} {")
     node.delegators.accept(this)
     node.stateEnum.accept(this)
     node.eventEnum.accept(this)
@@ -196,7 +196,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
       transitions = Seq(
         transition("I", sub("e", "I", "a"))))
 
-    assertGenerated(machine, "class f:null {d e e p he sc}")
+    assertGenerated(machine, "class f {d e e p he sc}")
   }
 
   test("State order is preserved") {
