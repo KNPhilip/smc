@@ -1,7 +1,7 @@
 package smc.generators.nsc
 
 import munit.FunSuite
-import scala.collection.mutable.ListBuffer
+import smc.generators.OptimizedBuilder._
 import smc.optimizer.{OptimizedStateMachine, OptimizedSubTransition, OptimizedTransition}
 
 abstract class NscFactorySuite extends FunSuite {
@@ -46,7 +46,7 @@ abstract class DummyNscVisitor extends NscNodeVisitor {
   override def writeFiles(path: String, fileName: String): Unit = ()
 }
 
-class TestVisitor(out: String => Unit) extends DummyNscVisitor {
+final class TestVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: SwitchCaseNode): Unit = {
     out(s"s ${node.variableName} {")
     node.caseNodes.foreach(_.accept(this))
@@ -72,22 +72,22 @@ class TestVisitor(out: String => Unit) extends DummyNscVisitor {
     out(s" default(${node.state});")
 }
 
-class EnumVisitor(out: String => Unit) extends DummyNscVisitor {
+final class EnumVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: EnumNode): Unit =
     out(s"enum ${node.name} ${node.enumerators.mkString("[", ", ", "]")} ")
 }
 
-class StatePropertyVisitor(out: String => Unit) extends DummyNscVisitor {
+final class StatePropertyVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: StatePropertyNode): Unit =
     out(s"state property = ${node.initialState}")
 }
 
-class EventDelegatorVisitor(out: String => Unit) extends DummyNscVisitor {
+final class EventDelegatorVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: EventDelegatorsNode): Unit =
     out(s"delegators ${node.events}")
 }
 
-class HandleEventVisitor(out: String => Unit) extends DummyNscVisitor {
+final class HandleEventVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: SwitchCaseNode): Unit = out("s")
   override def visit(node: HandleEventNode): Unit = {
     out("he(")
@@ -96,7 +96,7 @@ class HandleEventVisitor(out: String => Unit) extends DummyNscVisitor {
   }
 }
 
-class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
+final class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: SwitchCaseNode): Unit = out("sc")
   override def visit(node: EnumNode): Unit = out("e ")
   override def visit(node: StatePropertyNode): Unit = out("p ")
@@ -114,9 +114,7 @@ class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
   }
 }
 
-class NscGenerationSuite extends NscFactorySuite {
-  import OptimizedBuilder._
-
+final class NscGenerationSuite extends NscFactorySuite {
   private def singleStateMachine = sm(
     states = Seq("I"),
     events = Seq("e"),
@@ -248,28 +246,4 @@ class NscGenerationSuite extends NscFactorySuite {
       "s state {case A {s event {case e {setState(State.B) a() } default(A);}}}"
     )
   }
-}
-
-object OptimizedBuilder {
-  def sm(name: String = "f", initial: String = "I", states: Seq[String],
-         events: Seq[String], actions: Seq[String], transitions: Seq[OptimizedTransition]
-        ): OptimizedStateMachine = {
-    val sm = new OptimizedStateMachine(name, initial)
-
-    sm.states ++= states
-    sm.events ++= events
-    sm.actions ++= actions
-    sm.transitions ++= transitions
-
-    sm
-  }
-
-  def transition(state: String, subs: OptimizedSubTransition*): OptimizedTransition = {
-    val t = new OptimizedTransition(state)
-    t.subTransitions ++= subs
-    t
-  }
-
-  def sub(event: String, next: String, actions: String*): OptimizedSubTransition =
-    new OptimizedSubTransition(event, next, ListBuffer(actions: _*))
 }
