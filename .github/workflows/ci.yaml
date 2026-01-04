@@ -31,5 +31,8 @@ jobs:
         with:
           sbt-runner-version: 1.11.7
 
+      - name: Compile project
+        run: sbt compile
+
       - name: Run tests
         run: sbt test
