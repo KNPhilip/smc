@@ -5,7 +5,7 @@ object CodeGeneratorFactory {
     if (strategy.toLowerCase == "nsc") {
       new NscCodeGenerator(language, outputPath)
     } else {
-      new NscCodeGenerator(language, outputPath)
+      throw new IllegalArgumentException(s"Unknown strategy \"$strategy\".")
     }
   }
 }

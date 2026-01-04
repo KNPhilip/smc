@@ -16,7 +16,7 @@ final class NscCodeGenerator(val language: String,
     if (language.toLowerCase == "scala") {
       new ScalaVisitor()
     } else {
-      new ScalaVisitor()
+      throw new IllegalArgumentException(s"Language \"$language\" is not currently supported.")
     }
   }
 }
