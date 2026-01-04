@@ -1,6 +1,6 @@
-package smc.generators.nsc
+package smc.generators.selection
 
-trait NscNodeVisitor {
+trait SelectionNodeVisitor {
   def visit(node: SwitchCaseNode): Unit
   def visit(node: CaseNode): Unit
   def visit(node: DefaultCaseNode): Unit

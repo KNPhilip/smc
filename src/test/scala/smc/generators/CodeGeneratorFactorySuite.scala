@@ -3,15 +3,15 @@ package smc.generators
 import munit.FunSuite
 
 final class CodeGeneratorFactorySuite extends FunSuite {
-  test("Factory can create code generator for NSC strategy") {
-    val generator: CodeGenerator = CodeGeneratorFactory.create("", "nsc", "")
-    val correctType: Boolean = generator.isInstanceOf[NscCodeGenerator]
+  test("Factory can create code generator for selection strategy") {
+    val generator: CodeGenerator = CodeGeneratorFactory.create("", "selection", "")
+    val correctType: Boolean = generator.isInstanceOf[SelectionCodeGenerator]
     assert(correctType)
   }
 
-  test("Factory can create code generator for NSC strategy ignoring casing") {
-    val generator: CodeGenerator = CodeGeneratorFactory.create("", "nSC", "")
-    val correctType: Boolean = generator.isInstanceOf[NscCodeGenerator]
+  test("Factory can create code generator for selection strategy ignoring casing") {
+    val generator: CodeGenerator = CodeGeneratorFactory.create("", "sElEcTIoN", "")
+    val correctType: Boolean = generator.isInstanceOf[SelectionCodeGenerator]
     assert(correctType)
   }
 

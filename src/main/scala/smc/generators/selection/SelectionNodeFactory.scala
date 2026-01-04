@@ -1,9 +1,9 @@
-package smc.generators.nsc
+package smc.generators.selection
 
 import smc.optimizer.{OptimizedStateMachine, OptimizedTransition, OptimizedSubTransition}
 
-object NscNodeFactory {
-  def generate(sm: OptimizedStateMachine): NscNode = {
+object SelectionNodeFactory {
+  def generate(sm: OptimizedStateMachine): SelectionNode = {
     val eventDelegators = EventDelegatorsNode(sm.events.toList)
     val stateProperty = StatePropertyNode(sm.initialState)
     val stateEnum = EnumNode("State", sm.states.toList)

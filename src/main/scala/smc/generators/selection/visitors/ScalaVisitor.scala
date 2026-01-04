@@ -1,10 +1,10 @@
-package smc.generators.nsc.visitors
+package smc.generators.selection.visitors
 
 import java.io.IOException
 import java.nio.file.{FileSystems, Files}
-import smc.generators.nsc._
+import smc.generators.selection._
 
-final class ScalaVisitor extends NscNodeVisitor {
+final class ScalaVisitor extends SelectionNodeVisitor {
   private val output = new StringBuilder
   private var states: List[String] = List.empty
 

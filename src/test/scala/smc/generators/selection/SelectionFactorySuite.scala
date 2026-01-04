@@ -1,11 +1,12 @@
-package smc.generators.nsc
+package smc.generators.selection
 
 import munit.FunSuite
 import smc.generators.OptimizedBuilder._
+import smc.generators.selection._
 import smc.optimizer.{OptimizedStateMachine, OptimizedSubTransition, OptimizedTransition}
 
-abstract class NscFactorySuite extends FunSuite {
-  protected var visitor: NscNodeVisitor = _
+abstract class SelectionFactorySuite extends FunSuite {
+  protected var visitor: SelectionNodeVisitor = _
   protected val output = new StringBuilder
 
   override def beforeEach(context: BeforeEach): Unit = {
@@ -13,16 +14,16 @@ abstract class NscFactorySuite extends FunSuite {
     output.clear()
   }
 
-  protected def withVisitor(v: (String => Unit) => NscNodeVisitor): Unit =
+  protected def withVisitor(v: (String => Unit) => SelectionNodeVisitor): Unit =
     visitor = v(output.append)
 
   protected def assertGenerated(machine: OptimizedStateMachine, expected: String): Unit = {
-    NscNodeFactory.generate(machine).accept(visitor)
+    SelectionNodeFactory.generate(machine).accept(visitor)
     assertEquals(output.toString(), expected)
   }
 }
 
-abstract class DummyNscVisitor extends NscNodeVisitor {
+abstract class DummyNscVisitor extends SelectionNodeVisitor {
   override def visit(node: SwitchCaseNode): Unit = ()
   override def visit(node: CaseNode): Unit = ()
   override def visit(node: DefaultCaseNode): Unit = ()
@@ -114,7 +115,7 @@ final class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
   }
 }
 
-final class NscGenerationSuite extends NscFactorySuite {
+final class SelectionGenerationSuite extends SelectionFactorySuite {
   private def singleStateMachine = sm(
     states = Seq("I"),
     events = Seq("e"),

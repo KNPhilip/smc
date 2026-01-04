@@ -1,15 +1,16 @@
-package smc.generators.nsc
+package smc.generators.selection
 
 import munit.FunSuite
-import smc.generators.nsc.visitors.ScalaVisitor
 import smc.optimizer.OptimizedStateMachine
-import smc.generators.OptimizedBuilder._
+import smc.generators.OptimizedBuilder.*
+import smc.generators.selection.SelectionNodeFactory
+import smc.generators.selection.visitors.ScalaVisitor
 
 final class ScalaVisitorSuite extends FunSuite {
   private val visitor = new ScalaVisitor()
 
   private def assertGenerated(machine: OptimizedStateMachine, expected: String): Unit = {
-    NscNodeFactory.generate(machine).accept(visitor)
+    SelectionNodeFactory.generate(machine).accept(visitor)
     assertEquals(visitor.getOutput, expected)
   }
 

@@ -11,7 +11,7 @@ import java.nio.file.{Files, Paths}
 
 object Main {
     private var language: String = "Scala"
-    private var strategy: String = "Nsc"
+    private var strategy: String = "Selection"
     private var inputPath: String = ""
     private var outputPath: String = ""
 
