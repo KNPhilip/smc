@@ -21,11 +21,11 @@ class SpyTokenCollector extends TokenCollector {
   override def event(line: Int, position: Int): Unit =
     tokens += "EV"
 
-  override def superstate(line: Int, position: Int): Unit =
-    tokens += "SU"
+  override def abstractState(line: Int, position: Int): Unit =
+    tokens += "AB"
 
-  override def inherits(line: Int, position: Int): Unit =
-    tokens += "IH"
+  override def colon(line: Int, position: Int): Unit =
+    tokens += "CO"
 
   override def entry(line: Int, position: Int): Unit =
     tokens += "EN"

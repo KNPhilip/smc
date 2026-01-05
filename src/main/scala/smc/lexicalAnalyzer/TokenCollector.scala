@@ -5,14 +5,14 @@ trait TokenCollector {
   def initial(line: Int, position: Int): Unit
   def state(line: Int, position: Int): Unit
   def event(line: Int, position: Int): Unit
-  def superstate(line: Int, position: Int): Unit
-  def inherits(line: Int, position: Int): Unit
+  def abstractState(line: Int, position: Int): Unit
   def entry(line: Int, position: Int): Unit
   def exit(line: Int, position: Int): Unit
   def arrow(line: Int, position: Int): Unit
   def openBrace(line: Int, position: Int): Unit
   def closeBrace(line: Int, position: Int): Unit
   def dash(line: Int, position: Int): Unit
+  def colon(line: Int, position: Int): Unit
   def name(line: Int, position: Int, value: String): Unit
   def error(line: Int, position: Int): Unit
 }

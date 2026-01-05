@@ -16,7 +16,7 @@ final class Optimizer {
   }
 
   private def addStates(machine: StateMachine, optimized: OptimizedStateMachine): Unit =
-    machine.states.filterNot(_.isSuperState).foreach(s => optimized.states += s.name)
+    machine.states.filterNot(_.isAbstract).foreach(s => optimized.states += s.name)
 
   private def addEvents(machine: StateMachine, optimized: OptimizedStateMachine): Unit =
     machine.states.foreach(_.events.foreach(e => optimized.events += e.name))
@@ -31,7 +31,7 @@ final class Optimizer {
   private def addTransitions(machine: StateMachine, optimized: OptimizedStateMachine): Unit = {
     val stateMap = machine.states.map(s => s.name -> s).toMap
 
-    machine.states.filterNot(_.isSuperState).foreach { state =>
+    machine.states.filterNot(_.isAbstract).foreach { state =>
       val transition = new OptimizedTransition(state.name)
       val usedEvents = MutableSet.empty[String]
 

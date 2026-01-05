@@ -73,7 +73,7 @@ final class SemanticAnalyzer {
 
   private def checkForUndefinedSuperstate(input: List[State]): Unit = {
     val superstates: List[String] = input
-      .filter(state => state.isSuperState)
+      .filter(state => state.isAbstract)
       .map(_.name)
 
     input.foreach(state => {
@@ -86,7 +86,7 @@ final class SemanticAnalyzer {
 
   private def checkForSuperstatesAsNextState(input: List[State]): Unit = {
     val superstates: List[String] = input
-      .filter(state => state.isSuperState)
+      .filter(state => state.isAbstract)
       .map(_.name)
 
     input.foreach(state => {
@@ -100,7 +100,7 @@ final class SemanticAnalyzer {
   }
 
   private def checkForConflictInSuperstate(input: List[State]): Unit = {
-    val superstates = input.filter(state => state.isSuperState)
+    val superstates = input.filter(state => state.isAbstract)
     val relevantStates = input.filter(state => state.superStates.nonEmpty)
 
     relevantStates.foreach(state => {
@@ -152,7 +152,7 @@ final class SemanticAnalyzer {
 
   private def checkForDuplicateTransitions(states: List[State]): Unit = {
     val superstates: Map[String, State] = states
-      .filter(_.isSuperState)
+      .filter(_.isAbstract)
       .map(s => s.name -> s)
       .toMap
 

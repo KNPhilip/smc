@@ -21,11 +21,11 @@ final class SyntacticalAnalyzer extends TokenCollector {
   override def event(line: Int, position: Int): Unit =
     handleEvent(Event, line, position)
 
-  override def superstate(line: Int, position: Int): Unit =
-    handleEvent(Superstate, line, position)
+  override def abstractState(line: Int, position: Int): Unit =
+    handleEvent(Abstract, line, position)
 
-  override def inherits(line: Int, position: Int): Unit =
-    handleEvent(Inherits, line, position)
+  override def colon(line: Int, position: Int): Unit =
+    handleEvent(Colon, line, position)
 
   override def entry(line: Int, position: Int): Unit =
     handleEvent(Entry, line, position)
@@ -114,7 +114,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(MachineSpec, State, StateValue, None),
     Transition(StateValue, Name, EventArrow, Some(_.addTransition())),
     Transition(EventArrow, OpenBrace, SubtransitionSpec, None),
-    Transition(EventArrow, Inherits, InheritsValue, None),
+    Transition(EventArrow, Colon, InheritsValue, None),
     Transition(InheritsValue, Name, InheritsValue, Some(_.addInheritance())),
     Transition(InheritsValue, OpenBrace, SubtransitionSpec, None),
     Transition(EventArrow, Arrow, EventValue, None),
@@ -125,7 +125,7 @@ final class SyntacticalAnalyzer extends TokenCollector {
     Transition(ActionArrow, ClosedBrace, MachineDeclaration, Some(_.concludeStateMachine())),
     Transition(ActionArrow, State, StateValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Initial, InitialValue, Some(_.concludeTransition())),
-    Transition(ActionArrow, Superstate, SuperstateValue, Some(_.concludeTransition())),
+    Transition(ActionArrow, Abstract, SuperstateValue, Some(_.concludeTransition())),
     Transition(ActionArrow, Arrow, ActionDeclaration, None),
     Transition(ActionDeclaration, Name, MachineSpec, Some(_.addAction())),
     Transition(ActionDeclaration, OpenBrace, ActionValue, None),
@@ -134,9 +134,9 @@ final class SyntacticalAnalyzer extends TokenCollector {
   )
 
   private val superstateTransitions: List[Transition] = List(
-    Transition(MachineSpec, Superstate, SuperstateValue, Some(_.addTransition())),
+    Transition(MachineSpec, Abstract, SuperstateValue, Some(_.addTransition())),
     Transition(SuperstateValue, Name, SuperstateDeclaration, Some(_.markAsSuperstate())),
-    Transition(SuperstateDeclaration, Inherits, InheritsValue, None),
+    Transition(SuperstateDeclaration, Colon, InheritsValue, None),
     Transition(SuperstateDeclaration, OpenBrace, SubtransitionSpec, None),
     Transition(EventArrow, OpenBrace, SubtransitionSpec, None)
   )

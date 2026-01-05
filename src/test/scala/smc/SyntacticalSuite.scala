@@ -142,67 +142,67 @@ class SubtransitionSyntaxSuite extends SyntacticalSuite {
   }
 
   test("Parse subtransition with inheritance") {
-    assertParsed("$state S $inherits SU { $event E => - }", "    S SUSU E S")
+    assertParsed("$state S : SU { $event E => - }", "    S SUSU E S")
   }
 }
 
-class SuperstateSyntaxSuite extends SyntacticalSuite {
+class AbstractStateSyntaxSuite extends SyntacticalSuite {
   override protected def assertParsed(input: String, output: String): Unit = {
     val inputWithBoilerplate = s"$$machine MyMachine => Init {$input}"
     val outputWithBoilerplate = s"{\n  machine MyMachine initial Init\n$output\n}"
     super.assertParsed(inputWithBoilerplate, outputWithBoilerplate)
   }
 
-  test("Parse empty superstate") {
-    assertParsed("$superstate Su {}", "    (Su) ")
+  test("Parse empty abstract state") {
+    assertParsed("$abstract Su {}", "    (Su) ")
   }
 
-  test("Parse simple superstate") {
-    assertParsed("$superstate Su { $event Ev => De }", "    (Su) Ev De")
+  test("Parse simple abstract state") {
+    assertParsed("$abstract Su { $event Ev => De }", "    (Su) Ev De")
   }
 
-  test("Parse superstate with hyphen destination") {
-    assertParsed("$superstate Su { $event Ev => - }", "    (Su) Ev Su")
+  test("Parse abstract state with hyphen destination") {
+    assertParsed("$abstract Su { $event Ev => - }", "    (Su) Ev Su")
   }
 
-  test("Parse superstate with single action") {
-    assertParsed("$superstate Su { $event Ev => - => Ac }", "    (Su) Ev Su Ac")
+  test("Parse abstract state with single action") {
+    assertParsed("$abstract Su { $event Ev => - => Ac }", "    (Su) Ev Su Ac")
   }
 
-  test("Parse superstate with single grouped action, treating it as single action") {
-    assertParsed("$superstate Su { $event Ev => - => {Ac} }", "    (Su) Ev Su Ac")
+  test("Parse abstract state with single grouped action, treating it as single action") {
+    assertParsed("$abstract Su { $event Ev => - => {Ac} }", "    (Su) Ev Su Ac")
   }
 
-  test("Parse superstate with multiple grouped actions") {
-    assertParsed("$superstate Su { $event Ev => - => {Ac Ac} }", "    (Su) Ev Su {Ac Ac}")
+  test("Parse abstract state with multiple grouped actions") {
+    assertParsed("$abstract Su { $event Ev => - => {Ac Ac} }", "    (Su) Ev Su {Ac Ac}")
   }
 
-  test("Parse superstate with multiple events") {
-    assertParsed("$superstate Su { $event Ev1 => - => {Ac1 Ac2} $event Ev2 => St2 => {Ac3} }",
+  test("Parse abstract state with multiple events") {
+    assertParsed("$abstract Su { $event Ev1 => - => {Ac1 Ac2} $event Ev2 => St2 => {Ac3} }",
       "    (Su) {\n" +
       "      Ev1 Su {Ac1 Ac2}\n" +
       "      Ev2 St2 Ac3\n" +
       "    }")
   }
 
-  test("Parse superstate with single entry action") {
-    assertParsed("$superstate Su { $event E => - $entry A }", "    (Su) ENA E Su")
+  test("Parse abstract state with single entry action") {
+    assertParsed("$abstract Su { $event E => - $entry A }", "    (Su) ENA E Su")
   }
 
-  test("Parse superstate with multiple entry actions") {
-    assertParsed("$superstate Su { $event E => - $entry {A1 A2} }", "    (Su) ENA1 ENA2 E Su")
+  test("Parse abstract state with multiple entry actions") {
+    assertParsed("$abstract Su { $event E => - $entry {A1 A2} }", "    (Su) ENA1 ENA2 E Su")
   }
 
-  test("Parse superstate with single exit action") {
-    assertParsed("$superstate Su { $event E => - $exit A }", "    (Su) EXA E Su")
+  test("Parse abstract state with single exit action") {
+    assertParsed("$abstract Su { $event E => - $exit A }", "    (Su) EXA E Su")
   }
 
-  test("Parse superstate with multiple exit actions") {
-    assertParsed("$superstate Su { $event E => - $exit {A1 A2} }", "    (Su) EXA1 EXA2 E Su")
+  test("Parse abstract state with multiple exit actions") {
+    assertParsed("$abstract Su { $event E => - $exit {A1 A2} }", "    (Su) EXA1 EXA2 E Su")
   }
 
-  test("Parse superstate which has inheritance of its own") {
-    assertParsed("$superstate SU1 $inherits SU2 { $event E => - }", "    (SU1) SUSU2 E SU1")
+  test("Parse abstract state which has inheritance of its own") {
+    assertParsed("$abstract SU1 : SU2 { $event E => - }", "    (SU1) SUSU2 E SU1")
   }
 }
 
@@ -225,15 +225,15 @@ class ComplicatedSyntaxSuite extends SyntacticalSuite {
     assertParsed(
       "$machine CoffeeMachine {\n" +
       "  $initial Selecting\n" +
-      "  $superstate Operational {\n" +
+      "  $abstract Operational {\n" +
       "    $event PowerOutage => Off\n" +
       "  }\n" +
-      "  $state Selecting $inherits Operational {\n" +
+      "  $state Selecting : Operational {\n" +
       "    $entry DisplayMenu\n" +
       "    $event ChooseDrink => Brewing\n" +
       "    $event NoMoreCoffee => Selecting\n" +
       "  }\n" +
-      "  $state Brewing $inherits Operational {\n" +
+      "  $state Brewing : Operational {\n" +
       "    $entry StartHeating\n" +
       "    $exit StopHeating\n" +
       "    $event Finish => Selecting => dispenseCup\n" +
@@ -258,14 +258,14 @@ class ComplicatedSyntaxSuite extends SyntacticalSuite {
   test("Parse syntax sugar sample printer FSM") {
     assertParsed(
       "$machine Printer => Idle {\n" +
-      "  $superstate Operational {\n" +
+      "  $abstract Operational {\n" +
       "    $event PowerLoss => Offline\n" +
       "  }\n" +
-      "  $state Idle $inherits Operational {\n" +
+      "  $state Idle : Operational {\n" +
       "    $event Print => Printing\n" +
       "    $event Cancel => - => {logCancelWithoutJob beep}\n" +
       "  }\n" +
-      "  $state Printing $inherits Operational {\n" +
+      "  $state Printing : Operational {\n" +
       "    $event Finish => Idle => ejectPage\n" +
       "  }\n" +
       "  $state Offline {\n" +
@@ -313,8 +313,8 @@ class ErrorSyntaxSuite extends SyntacticalSuite {
   }
 
   test("Parser gives invalid superstate error") {
-    assertParseError("$machine m => i { $superstate }",
-      "Syntax error: SuperstateError. SuperstateValue|ClosedBrace. line 1, position 30.")
+    assertParseError("$machine m => i { $abstract }",
+      "Syntax error: SuperstateError. SuperstateValue|ClosedBrace. line 1, position 28.")
   }
 
   test("Parser gives invalid entry action error") {
@@ -361,7 +361,7 @@ private object StateMachineRenderer {
 
   private def renderState(state: State): String = {
     val base =
-      if (state.isSuperState) s"(${state.name})" else state.name
+      if (state.isAbstract) s"(${state.name})" else state.name
 
     val supers = state.superStates
       .collect { case s if s != null => " SU" + s }.mkString

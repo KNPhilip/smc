@@ -63,10 +63,10 @@ class BasicOptimizerSuite extends OptimizationSuite {
     syntax.machines += new StateMachine("machine") {
       states += new State("state1")
       states += new State("state2") {
-        isSuperState = true
+        isAbstract = true
       }
       states += new State("state3") {
-        isSuperState = true
+        isAbstract = true
       }
     }
 
@@ -191,12 +191,12 @@ class EntryAndExitTransitionOptimizerSuite extends OptimizationSuite {
 
   test("Superstate entry and exit actions properly collected") {
     syntax.machines.last.states += new State("exitSuper") {
-      isSuperState = true
+      isAbstract = true
       exitActions += "exit1"
       exitActions += "exit2"
     }
     syntax.machines.last.states += new State("entrySuper") {
-      isSuperState = true
+      isAbstract = true
       entryActions += "entry1"
       entryActions += "entry2"
     }
@@ -226,20 +226,20 @@ class EntryAndExitTransitionOptimizerSuite extends OptimizationSuite {
 
   test("Multiple superstate entry and exit actions collected in the right order") {
     syntax.machines.last.states += new State("exitSuper1") {
-      isSuperState = true
+      isAbstract = true
       exitActions += "exit1"
     }
     syntax.machines.last.states += new State("exitSuper2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "exitSuper1"
       exitActions += "exit2"
     }
     syntax.machines.last.states += new State("entrySuper1") {
-      isSuperState = true
+      isAbstract = true
       entryActions += "entry1"
     }
     syntax.machines.last.states += new State("entrySuper2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "entrySuper1"
       entryActions += "entry2"
     }
@@ -269,30 +269,30 @@ class EntryAndExitTransitionOptimizerSuite extends OptimizationSuite {
 
   test("Diamond hierarchy entry and exit actions collected in the right order") {
     syntax.machines.last.states += new State("exitSuper1") {
-      isSuperState = true
+      isAbstract = true
       exitActions += "exit1"
     }
     syntax.machines.last.states += new State("exitSuper2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "exitSuper1"
       exitActions += "exit2"
     }
     syntax.machines.last.states += new State("exitSuper3") {
-      isSuperState = true
+      isAbstract = true
       superStates += "exitSuper1"
       exitActions += "exit3"
     }
     syntax.machines.last.states += new State("entrySuper1") {
-      isSuperState = true
+      isAbstract = true
       entryActions += "entry1"
     }
     syntax.machines.last.states += new State("entrySuper2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "entrySuper1"
       entryActions += "entry2"
     }
     syntax.machines.last.states += new State("entrySuper3") {
-      isSuperState = true
+      isAbstract = true
       superStates += "entrySuper1"
       entryActions += "entry3"
     }
@@ -346,7 +346,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Simple inheritance of transitions") {
     syntax.machines.last.states += new State("super") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("superEvent") {
         targetState = "state2"
         actions += "superAction"
@@ -373,7 +373,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Complicated inheritance of transitions") {
     syntax.machines.last.states += new State("super1") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("superEvent1") {
         targetState = "state1"
         actions += "superAction1"
@@ -384,7 +384,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
       }
     }
     syntax.machines.last.states += new State("super2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "super1"
       events += new Event("superEvent") {
         targetState = "state2"
@@ -417,14 +417,14 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Multiple inheritance of transitions") {
     syntax.machines.last.states += new State("super1") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("superEvent1") {
         targetState = "state2"
         actions += "superAction1"
       }
     }
     syntax.machines.last.states += new State("super2") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("superEvent2") {
         targetState = "state2"
         actions += "superAction2"
@@ -457,14 +457,14 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Diamond of death inheritance of transitions") {
     syntax.machines.last.states += new State("superRoot") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("rootEvent") {
         targetState = "state2"
         actions += "rootAction"
       }
     }
     syntax.machines.last.states += new State("super1") {
-      isSuperState = true
+      isAbstract = true
       superStates += "superRoot"
       events += new Event("event1") {
         targetState = "state2"
@@ -472,7 +472,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
       }
     }
     syntax.machines.last.states += new State("super2") {
-      isSuperState = true
+      isAbstract = true
       superStates += "superRoot"
       events += new Event("event2") {
         targetState = "state2"
@@ -506,7 +506,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Overriding transitions") {
     syntax.machines.last.states += new State("super") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event") {
         targetState = "state3"
         actions += "action1"
@@ -538,7 +538,7 @@ class SuperstateOptimizerSuite extends OptimizationSuite {
 
   test("Get rid of duplicate transitions") {
     syntax.machines.last.states += new State("super") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event") {
         targetState = "state2"
         actions += "action"
@@ -599,7 +599,7 @@ class HappyPathOptimizerSuite extends OptimizationSuite {
     syntax.machines += new StateMachine("CoffeeMachine") {
       initialState = "Selecting"
       states += new State("Operational") {
-        isSuperState = true
+        isAbstract = true
         events += new Event("PowerOutage") {
           targetState = "Off"
         }
@@ -658,7 +658,7 @@ class HappyPathOptimizerSuite extends OptimizationSuite {
     syntax.machines += new StateMachine("Printer") {
       initialState = "Idle"
       states += new State("Operational") {
-        isSuperState = true
+        isAbstract = true
         events += new Event("PowerLoss") {
           targetState = "Offline"
         }

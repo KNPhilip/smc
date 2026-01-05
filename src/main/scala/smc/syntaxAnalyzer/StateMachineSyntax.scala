@@ -28,7 +28,7 @@ class State(var name: String) {
   var entryActions: ListBuffer[String] = ListBuffer.empty
   var exitActions: ListBuffer[String] = ListBuffer.empty
   var superStates: ListBuffer[String] = ListBuffer.empty
-  var isSuperState: Boolean = false
+  var isAbstract: Boolean = false
 }
 
 class Event(val name: String) {

@@ -94,8 +94,7 @@ class LexicalAnalyzer(collector: TokenCollector) {
     "$initial"    -> collector.initial,
     "$state"      -> collector.state,
     "$event"      -> collector.event,
-    "$superstate" -> collector.superstate,
-    "$inherits"   -> collector.inherits,
+    "$abstract"   -> collector.abstractState,
     "$entry"      -> collector.entry,
     "$exit"       -> collector.exit
   )
@@ -118,6 +117,7 @@ class LexicalAnalyzer(collector: TokenCollector) {
     "{"  -> collector.openBrace,
     "}"  -> collector.closeBrace,
     "-"  -> collector.dash,
+    ":" -> collector.colon,
     "=>" -> collector.arrow,
     "->" -> collector.arrow
   )

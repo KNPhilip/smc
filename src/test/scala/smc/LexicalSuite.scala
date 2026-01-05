@@ -35,12 +35,8 @@ class KeywordLexerSuite extends LexicalSuite {
     assertLexed("$event", "EV")
   }
 
-  test("Can lex the superstate keyword") {
-    assertLexed("$superstate", "SU")
-  }
-
-  test("Can lex the inherits keyword") {
-    assertLexed("$inherits", "IH")
+  test("Can lex the abstract keyword") {
+    assertLexed("$abstract", "AB")
   }
 
   test("Can lex the entry keyword") {
@@ -75,6 +71,10 @@ class SyntaxSugarLexerSuite extends LexicalSuite {
 
   test("Can lex a dash") {
     assertLexed("-", "DA")
+  }
+
+  test("Can lex a colon") {
+    assertLexed(":", "CO")
   }
 
   test("Can lex the arrow syntax") {
@@ -179,9 +179,9 @@ class ComplexSyntaxLexerSuite extends LexicalSuite {
 
   test("Sequence of all keywords") {
     val input = "$machine $initial $state $event " +
-      "$superstate $inherits $entry $exit"
+      "$abstract $entry $exit"
 
-    assertLexed(input, "MA, IN, ST, EV, SU, IH, EN, EX")
+    assertLexed(input, "MA, IN, ST, EV, AB, EN, EX")
   }
 
   test("Sequence of all syntax sugars") {

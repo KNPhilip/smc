@@ -244,7 +244,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Superstate is defined") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
     }
     syntax.machines.last.states += new State("state") {
       superStates += "superstate"
@@ -259,7 +259,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Superstates cannot be targets") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
     }
     syntax.machines.last.states += new State("state") {
       events += new Event("event") {
@@ -273,7 +273,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Superstates can be used as superstates") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
     }
     syntax.machines.last.states += new State("state") {
       superStates += "superstate"
@@ -288,7 +288,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Conflicting destination between events in a state and a superstate") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event") {
         targetState = "initial"
       }
@@ -306,13 +306,13 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Still finds conflicting superstates when multiple superstates are in scope") {
     syntax.machines.last.states += new State("superstate1") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event1") {
         targetState = "initial"
       }
     }
     syntax.machines.last.states += new State("superstate2") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event2") {
         targetState = "initial"
       }
@@ -331,7 +331,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Identical transition in superstate is not a conflict") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("event") {
         targetState = "initial"
       }
@@ -349,7 +349,7 @@ class SemanticSuperstateSuite extends SemanticSuite {
 
   test("Inherited duplicate transition is detected") {
     syntax.machines.last.states += new State("superstate") {
-      isSuperState = true
+      isAbstract = true
       events += new Event("reset") {
         targetState = "foo"
       }
@@ -408,7 +408,7 @@ class SemanticHappyPathSuite extends SemanticSuite {
     syntax.machines += new StateMachine("CoffeeMachine") {
       initialState = "Selecting"
       states += new State("Operational") {
-        isSuperState = true
+        isAbstract = true
         events += new Event("PowerOutage") {
           targetState = "Off"
         }
@@ -447,7 +447,7 @@ class SemanticHappyPathSuite extends SemanticSuite {
     syntax.machines += new StateMachine("Printer") {
       initialState = "Idle"
       states += new State("Operational") {
-        isSuperState = true
+        isAbstract = true
         events += new Event("PowerLoss") {
           targetState = "Offline"
         }

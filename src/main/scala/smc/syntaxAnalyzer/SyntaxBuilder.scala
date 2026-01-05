@@ -42,7 +42,7 @@ final class SyntaxBuilder {
 
   def markAsSuperstate(): Unit = {
     transition.name = name
-    transition.isSuperState = true
+    transition.isAbstract = true
   }
 
   def addEntryAction(): Unit =

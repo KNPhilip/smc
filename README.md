@@ -41,22 +41,22 @@ $machine "CoffeeMachine" {
 }
 ```
 
-It is also possible to define superstates, which allows substates to _inherit common events and actions_. This is useful to avoid duplication of events and actions that are shared across multiple states.
+It is also possible to define states that _inherit common events and actions_ from other states. This is useful to avoid duplication of events and actions that are shared across multiple states. You can also declare that a state is abstract (i.e. its sole purpose is to be inherited from).
 
-Here is an example that extends the previous `CoffeeMachine` state machine to include a superstate called `Operational`, which contains a common event for handling power outages. We also add a new state called `Off` to represent the powered-off state of the machine.
+Here is an example that extends the previous `CoffeeMachine` state machine to include an abstract state called `Operational`, which contains a common event for handling power outages. We also add a new state called `Off` to represent the powered-off state of the machine.
 
 ```sm
 $machine "CoffeeMachine" {
   $initial "Selecting"
-  $superstate "Operational" {
+  $abstract "Operational" {
     $event "PowerOutage" => "Off"
   }
-  $state "Selecting" $inherits "Operational" {
+  $state "Selecting" : "Operational" {
     $entry "DisplayMenu"
     $event "ChooseDrink" => "Brewing"
     $event "NoMoreCoffee" => "Selecting"
   }
-  $state "Brewing" $inherits "Operational" {
+  $state "Brewing" : "Operational" {
     $entry "StartHeating"
     $exit "StopHeating"
     $event "Finish" => "Selecting" => "dispenseCup"
@@ -68,7 +68,9 @@ $machine "CoffeeMachine" {
 }
 ```
 
-In the above example, the states `Selecting` and `Brewing` inherit the `PowerOutage` event from the superstate `Operational`. Inheritance is defined by specifying the superstate after the state name using the `$inherits` keyword.
+In the above example, the states `Selecting` and `Brewing` inherit the `PowerOutage` event from the superstate `Operational`. Inheritance is defined by specifying the superstate after the state name using the `:` syntax.
+
+Multiple inheritance is allowed as well. You can specify that with repeating the colons (e.g `Brewing : Operational : Object`).
 
 ### Comments
 
@@ -98,14 +100,14 @@ You can also use a hyphen to indicate that a transition will leave the state unc
 
 ```sm
 $machine "Printer" => "Idle" {
-  $superstate "Operational" {
+  $abstract "Operational" {
     $event "PowerLoss" => "Offline"
   }
-  $state "Idle" $inherits "Operational" {
+  $state "Idle" : "Operational" {
     $event "Print" => "Printing"
     $event "Cancel" => - => {"logCancelWithoutJob" "beep"}
   }
-  $state "Printing" $inherits "Operational" {
+  $state "Printing" : "Operational" {
     $event "Finish" => "Idle" => "ejectPage"
   }
   $state "Offline" {
@@ -115,7 +117,7 @@ $machine "Printer" => "Idle" {
 }
 ```
 
-First thing to notice is that the arrow `=>` syntax after the machine declaration indicates the initial state of the state machine. We see this act as the inheritance declaration a bit later as well. The hyphen `-` indicates that the state _remains unchanged_, though it still triggers _two actions_. Multiple actions are grouped using curly braces `{}`.
+First thing to notice is that the arrow `=>` syntax after the machine declaration indicates the initial state of the state machine. The hyphen `-` indicates that the state _remains unchanged_, though it still triggers _two actions_. Multiple actions are grouped using curly braces `{}`.
 
 ### Keywords
 
@@ -125,12 +127,11 @@ Here is an overview of the keywords used in the state machine definition languag
 - **$initial** - Declares the target state of the initial pseudostate.
 - **$state** - Defines a state within the state machine.
 - **$event** - Defines an event that triggers a transition from one state to another, optionally specifying actions to be executed during the transition.
-- **$superstate** - Defines a superstate that can contain common events and actions for its substates.
-- **$inherits** - Specifies that a state inherits events and actions from a superstate.
+- **$abstract** - Defines an abstract state (i.e. it exists only to be inherited from).
 - **$entry** - Defines an action to be executed when entering a state.
 - **$exit** - Defines an action to be executed when exiting a state.
 
-Additional syntax includes `#`, `//`, `/* */`, `=>`, `{}`, and `-` for various purposes as described in the above sections.
+Additional syntax includes `#`, `//`, `/* */`, `=>`, `{}`, `-`, and `:` for various purposes as described in the above sections.
 
 Extra whitespace and newlines are _ignored_, so you can format the state machine definitions in a way that is most readable to _you_.
 
@@ -148,10 +149,10 @@ initialState ::= "$initial" stateName
 superstate ::= "$superstate" string "{" superItem* "}"
 superItem  ::= entryAction | exitAction | event | comment | whitespace
 
-state ::= "$state" stateName ( inheritsClause )?
+state ::= "$state" stateName ( inheritsClause* )?
           ( "{" stateItem* "}" | terseTransition )
 
-inheritsClause ::= "$inherits" string
+inheritsClause ::= ":" string
 
 stateItem ::= entryAction | exitAction | event | comment | whitespace
 terseTransition ::= "=>" eventName "=>" destination ( "=>" action )?
