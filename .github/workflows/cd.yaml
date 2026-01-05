@@ -1,0 +1,45 @@
+name: Continuous Deployment
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Prepare Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '24'
+          cache: 'sbt'
+
+      - name: Install SBT
+        uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: 1.11.7
+
+      - name: Assemble jar file
+        run: sbt assembly
+
+      - name: Rename assembly jar to smc.jar
+        run: |
+          JAR_PATH=$(find . -type f -name "*assembly*.jar" | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "Assembly jar file not found."
+            exit 1
+          fi
+          cp "$JAR_PATH" smc.jar
+
+      - name: Upload release artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: smc.jar
