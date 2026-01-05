@@ -144,6 +144,10 @@ class SubtransitionSyntaxSuite extends SyntacticalSuite {
   test("Parse subtransition with inheritance") {
     assertParsed("$state S : SU { $event E => - }", "    S SUSU E S")
   }
+
+  test("Parse subtransition with multiple inheritance") {
+    assertParsed("$state S : SU1 : SU2 { $event E => - }", "    S SUSU1 SUSU2 E S")
+  }
 }
 
 class AbstractStateSyntaxSuite extends SyntacticalSuite {
