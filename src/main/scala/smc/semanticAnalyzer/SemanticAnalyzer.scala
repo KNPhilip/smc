@@ -1,6 +1,7 @@
 package smc.semanticAnalyzer
 
 import scala.collection.mutable.ListBuffer
+import smc.toCamelCase
 import smc.semanticAnalyzer.SemanticError.*
 import smc.syntaxAnalyzer.{StateMachineSyntax, StateMachine, State}
 
@@ -17,7 +18,8 @@ enum SemanticError:
   DUPLICATE_TRANSITION,
   UNDEFINED_SUPER_STATE,
   SUPERSTATE_AS_NEXT_STATE,
-  SUPERSTATE_CONFLICT
+  SUPERSTATE_CONFLICT,
+  DUPLICATE_NAME
 
 final class SemanticAnalyzer {
   var errors: ListBuffer[SemanticError] = ListBuffer.empty[SemanticError]
@@ -69,6 +71,7 @@ final class SemanticAnalyzer {
     checkForDuplicateStates(input)
     checkForDuplicateTransitions(input)
     checkForUnusedStates(input, initialState)
+    checkForDuplicateNames(input)
   }
 
   private def checkForUndefinedSuperstate(input: List[State]): Unit = {
@@ -184,5 +187,22 @@ final class SemanticAnalyzer {
 
     if (unused.nonEmpty)
       errors += UNUSED_STATE
+  }
+
+  private def checkForDuplicateNames(states: List[State]): Unit = {
+    val eventNames: List[String] = states.flatMap(_.events.map(_.name))
+    
+    val transitionActions: List[String] = states.flatMap(_.events.flatMap(_.actions))
+    val entryActions: List[String] = states.flatMap(_.entryActions)
+    val exitActions: List[String] = states.flatMap(_.exitActions)
+    val allActions: List[String] = transitionActions ++ entryActions ++ exitActions
+    
+    val normalizedEvents = eventNames.map(_.toCamelCase).toSet
+    val normalizedActions = allActions.map(_.toCamelCase).toSet
+    
+    val eventActionConflict = normalizedEvents.intersect(normalizedActions)
+    
+    if (eventActionConflict.nonEmpty)
+      errors += DUPLICATE_NAME
   }
 }
