@@ -21,12 +21,23 @@ final class Optimizer {
   private def addEvents(machine: StateMachine, optimized: OptimizedStateMachine): Unit =
     machine.states.foreach(_.events.foreach(e => optimized.events += e.name))
 
-  private def addActions(machine: StateMachine, optimized: OptimizedStateMachine): Unit =
+  private def addActions(machine: StateMachine, optimized: OptimizedStateMachine): Unit = {
+    val seenActions = MutableSet.empty[String]
     machine.states.foreach { s =>
-      s.entryActions.foreach(optimized.actions += _)
-      s.exitActions.foreach(optimized.actions += _)
-      s.events.flatMap(_.actions).foreach(optimized.actions += _)
+      s.entryActions.foreach { action =>
+        if (seenActions.add(action))
+          optimized.actions += action
+      }
+      s.exitActions.foreach { action =>
+        if (seenActions.add(action))
+          optimized.actions += action
+      }
+      s.events.flatMap(_.actions).foreach { action =>
+        if (seenActions.add(action))
+          optimized.actions += action
+      }
     }
+  }
 
   private def addTransitions(machine: StateMachine, optimized: OptimizedStateMachine): Unit = {
     val stateMap = machine.states.map(s => s.name -> s).toMap

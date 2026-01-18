@@ -117,6 +117,30 @@ class BasicOptimizerSuite extends OptimizationSuite {
     assertEquals(machines.head.actions,
       ListBuffer("action1", "action2", "action3", "action4", "action5", "action6"))
   }
+
+  test("Duplicate action names are collected only once") {
+    syntax.machines += new StateMachine("machine") {
+      states += new State("state1") {
+        entryActions += "commonAction"
+        exitActions += "anotherAction"
+        events += new Event("event1") {
+          actions += "commonAction"
+          actions += "uniqueAction"
+        }
+      }
+      states += new State("state2") {
+        entryActions += "anotherAction"
+        exitActions += "commonAction"
+        events += new Event("event2") {
+          actions += "commonAction"
+        }
+      }
+    }
+
+    val machines = optimize()
+    assertEquals(machines.head.actions,
+      ListBuffer("commonAction", "anotherAction", "uniqueAction"))
+  }
 }
 
 class EntryAndExitTransitionOptimizerSuite extends OptimizationSuite {
