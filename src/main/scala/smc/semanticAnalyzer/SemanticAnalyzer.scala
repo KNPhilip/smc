@@ -198,13 +198,10 @@ final class SemanticAnalyzer {
     val exitActions: List[String] = states.flatMap(_.exitActions)
     val allActions: List[String] = transitionActions ++ entryActions ++ exitActions
     
-    // Check for duplicate event names with action names (both become methods)
+    // Check for event names conflicting with action names (both become methods)
+    // Note: Duplicate actions across states are allowed - only one method is generated
     val eventActionConflict = eventNames.toSet.intersect(allActions.toSet)
     if (eventActionConflict.nonEmpty) {
-      errors += DUPLICATE_NAME
-    }
-    // Check for duplicate action names
-    else if (allActions.toSet.size != allActions.size) {
       errors += DUPLICATE_NAME
     }
   }

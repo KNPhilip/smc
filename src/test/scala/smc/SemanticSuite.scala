@@ -417,7 +417,7 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     assertPresentErrors(DUPLICATE_NAME)
   }
 
-  test("Duplicate action names in different transitions") {
+  test("Duplicate action names in different transitions are allowed") {
     syntax.machines.last.states += new State("state1") {
       events += new Event("event1") {
         targetState = "initial"
@@ -432,10 +432,10 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     }
 
     analyzeSyntax()
-    assertPresentErrors(DUPLICATE_NAME)
+    assertNonPresentErrors(DUPLICATE_NAME)
   }
 
-  test("Duplicate entry action names") {
+  test("Duplicate entry action names are allowed") {
     syntax.machines.last.states += new State("state1") {
       entryActions += "setup"
       events += new Event("event1") {
@@ -450,10 +450,10 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     }
 
     analyzeSyntax()
-    assertPresentErrors(DUPLICATE_NAME)
+    assertNonPresentErrors(DUPLICATE_NAME)
   }
 
-  test("Duplicate exit action names") {
+  test("Duplicate exit action names are allowed") {
     syntax.machines.last.states += new State("state1") {
       exitActions += "teardown"
       events += new Event("event1") {
@@ -468,10 +468,10 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     }
 
     analyzeSyntax()
-    assertPresentErrors(DUPLICATE_NAME)
+    assertNonPresentErrors(DUPLICATE_NAME)
   }
 
-  test("Entry action conflicts with exit action") {
+  test("Same action in entry and exit is allowed") {
     syntax.machines.last.states += new State("state") {
       entryActions += "doSomething"
       exitActions += "doSomething"
@@ -481,21 +481,7 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     }
 
     analyzeSyntax()
-    assertPresentErrors(DUPLICATE_NAME)
-  }
-
-  test("Multiple actions in same transition with same name") {
-    syntax.machines.last.states += new State("state") {
-      events += new Event("event") {
-        targetState = "initial"
-        actions += "action1"
-        actions += "action2"
-        actions += "action1"
-      }
-    }
-
-    analyzeSyntax()
-    assertPresentErrors(DUPLICATE_NAME)
+    assertNonPresentErrors(DUPLICATE_NAME)
   }
 
   test("No duplicate names when event and action are different") {
@@ -510,7 +496,7 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     assertNonPresentErrors(DUPLICATE_NAME)
   }
 
-  test("No duplicate names when multiple different actions exist") {
+  test("Multiple different actions across states are allowed") {
     syntax.machines.last.states += new State("state1") {
       entryActions += "setup1"
       exitActions += "teardown1"
