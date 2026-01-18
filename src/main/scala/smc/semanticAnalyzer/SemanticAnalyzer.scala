@@ -202,13 +202,10 @@ final class SemanticAnalyzer {
     val eventActionConflict = eventNames.toSet.intersect(allActions.toSet)
     if (eventActionConflict.nonEmpty) {
       errors += DUPLICATE_NAME
-      return
     }
-    
     // Check for duplicate action names
-    if (allActions.toSet.size != allActions.size) {
+    else if (allActions.toSet.size != allActions.size) {
       errors += DUPLICATE_NAME
-      return
     }
   }
 }
