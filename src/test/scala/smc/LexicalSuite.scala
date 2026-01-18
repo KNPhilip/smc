@@ -96,6 +96,26 @@ class SyntaxSugarLexerSuite extends LexicalSuite {
   test("Can lex multiple unquoted names") {
     assertLexed("Hello World", "NA-Hello, NA-World")
   }
+
+  test("Can lex name with underscores") {
+    assertLexed("\"Hello_World\"", "NA-Hello_World")
+  }
+
+  test("Can lex unquoted name with underscores") {
+    assertLexed("Hello_World", "NA-Hello_World")
+  }
+
+  test("Can lex name starting with underscore") {
+    assertLexed("\"_privateMethod\"", "NA-_privateMethod")
+  }
+
+  test("Can lex unquoted name starting with underscore") {
+    assertLexed("_privateMethod", "NA-_privateMethod")
+  }
+
+  test("Can lex name with multiple underscores") {
+    assertLexed("\"__internal__method__\"", "NA-__internal__method__")
+  }
 }
 
 class CommentsLexerSuite extends LexicalSuite {
@@ -145,7 +165,7 @@ class ErrorLexerSuite extends LexicalSuite {
   test("Can lex correct errors on complicated unknown syntax") {
     assertLexed(".!§£\n$@<>\\_\n*^`\n´|",
       "ER-L1-P1, ER-L1-P2, ER-L1-P3, ER-L1-P4, ER-L2-P1, " +
-      "ER-L2-P2, ER-L2-P3, ER-L2-P4, ER-L2-P5, ER-L2-P6, " +
+      "ER-L2-P2, ER-L2-P3, ER-L2-P4, ER-L2-P5, NA-_, " +
       "ER-L3-P1, ER-L3-P2, ER-L3-P3, ER-L4-P1, ER-L4-P2")
   }
 
@@ -160,6 +180,30 @@ class ErrorLexerSuite extends LexicalSuite {
 
   test("Can lex error when combining name with unknown syntax") {
     assertLexed("Hello%World", "NA-Hello, ER-L1-P6, NA-World")
+  }
+
+  test("Can lex error when name contains percent symbol") {
+    assertLexed("\"Hello%World\"", "ER-L1-P1, NA-Hello, ER-L1-P7, NA-World, ER-L1-P13")
+  }
+
+  test("Can lex error when name contains hash symbol") {
+    assertLexed("\"Hello#World\"", "ER-L1-P1, NA-Hello")
+  }
+
+  test("Can lex error when name contains at symbol") {
+    assertLexed("\"Hello@World\"", "ER-L1-P1, NA-Hello, ER-L1-P7, NA-World, ER-L1-P13")
+  }
+
+  test("Can lex error when name contains dollar symbol") {
+    assertLexed("\"Hello$World\"", "ER-L1-P1, NA-Hello, ER-L1-P7, NA-World, ER-L1-P13")
+  }
+
+  test("Can lex error when name starts with digit") {
+    assertLexed("\"123Hello\"", "ER-L1-P1, ER-L1-P2, ER-L1-P3, ER-L1-P4, NA-Hello, ER-L1-P10")
+  }
+
+  test("Can lex error when unquoted name starts with digit") {
+    assertLexed("123Hello", "ER-L1-P1, ER-L1-P2, ER-L1-P3, NA-Hello")
   }
 }
 

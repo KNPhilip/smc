@@ -10,6 +10,6 @@ val keywordPattern: Regex = """^\$(\w+)""".r
 
 val syntaxSugarPattern = raw"(\{|\}|=>|->|-|:)".r
 
-val quotedName:   Regex = "^\"([A-Za-z0-9]+)\"".r
+val quotedName:   Regex = "^\"([A-Za-z_][A-Za-z0-9_]*)\"".r
 
-val unquotedName: Regex = "^[A-Za-z0-9]+".r
+val unquotedName: Regex = "^[A-Za-z_][A-Za-z0-9_]*".r
