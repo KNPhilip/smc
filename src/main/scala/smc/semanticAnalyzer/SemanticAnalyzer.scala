@@ -189,20 +189,16 @@ final class SemanticAnalyzer {
   }
 
   private def checkForDuplicateNames(states: List[State]): Unit = {
-    // Collect all event names
     val eventNames: List[String] = states.flatMap(_.events.map(_.name))
     
-    // Collect all action names (from transitions, entry actions, and exit actions)
     val transitionActions: List[String] = states.flatMap(_.events.flatMap(_.actions))
     val entryActions: List[String] = states.flatMap(_.entryActions)
     val exitActions: List[String] = states.flatMap(_.exitActions)
     val allActions: List[String] = transitionActions ++ entryActions ++ exitActions
     
-    // Check for event names conflicting with action names (both become methods)
-    // Note: Duplicate actions across states are allowed - only one method is generated
     val eventActionConflict = eventNames.toSet.intersect(allActions.toSet)
-    if (eventActionConflict.nonEmpty) {
+    
+    if (eventActionConflict.nonEmpty)
       errors += DUPLICATE_NAME
-    }
   }
 }
