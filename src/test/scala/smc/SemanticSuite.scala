@@ -417,6 +417,33 @@ class SemanticDuplicateNameSuite extends SemanticSuite {
     assertPresentErrors(DUPLICATE_NAME)
   }
 
+  test("Event and action with different casing conflict after normalization") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("HelloWorld") {
+        targetState = "initial"
+      }
+      events += new Event("trigger") {
+        targetState = "initial"
+        actions += "helloWorld"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Event and entry action with different casing conflict after normalization") {
+    syntax.machines.last.states += new State("state") {
+      entryActions += "InitializeState"
+      events += new Event("initialize_state") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
   test("Duplicate action names in different transitions are allowed") {
     syntax.machines.last.states += new State("state1") {
       events += new Event("event1") {
