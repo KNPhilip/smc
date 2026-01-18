@@ -2,8 +2,8 @@ package smc.generators.selection
 
 trait SelectionNodeVisitor {
   def visit(node: FsmClassNode): Unit
-  def visit(node: EventDelegatorsNode): Unit
-  def visit(node: StatePropertyNode): Unit
+  def visit(node: EventDelegatorNode): Unit
+  def visit(node: StateFieldNode): Unit
   def visit(node: HandleEventNode): Unit
   def visit(node: SwitchCaseNode): Unit
   def visit(node: CaseNode): Unit

@@ -4,8 +4,8 @@ import smc.optimizer.{OptimizedStateMachine, OptimizedTransition, OptimizedSubTr
 
 object SelectionNodeFactory {
   def generate(sm: OptimizedStateMachine): SelectionNode = {
-    val eventDelegators = EventDelegatorsNode(sm.events.toList)
-    val stateProperty = StatePropertyNode(sm.initialState)
+    val eventDelegators = EventDelegatorNode(sm.events.toList)
+    val stateProperty = StateFieldNode(sm.initialState)
     val stateEnum = EnumNode("State", sm.states.toList)
     val eventEnum = EnumNode("Event", sm.events.toList)
     val stateSwitch = buildStateSwitch(sm)
@@ -46,13 +46,8 @@ object SelectionNodeFactory {
   }
 
   private def buildActions(st: OptimizedSubTransition): CompositeNode = {
-    val setState = buildSetStateNode(st.nextState)
+    val setState = NextStateNode(st.nextState)
     val actionCalls = st.actions.toList.map(FunctionCallNode(_))
     CompositeNode(nodes = setState :: actionCalls)
-  }
-
-  private def buildSetStateNode(stateName: String): FunctionCallNode = {
-    val nextStateNode = NextStateNode(stateName)
-    FunctionCallNode(functionName = "setState", argument = Some(nextStateNode))
   }
 }
