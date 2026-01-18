@@ -30,8 +30,8 @@ abstract class DummyNscVisitor extends SelectionNodeVisitor {
   override def visit(node: FunctionCallNode): Unit = ()
   override def visit(node: EnumNode): Unit = ()
   override def visit(node: NextStateNode): Unit = ()
-  override def visit(node: StatePropertyNode): Unit = ()
-  override def visit(node: EventDelegatorsNode): Unit = ()
+  override def visit(node: StateFieldNode): Unit = ()
+  override def visit(node: EventDelegatorNode): Unit = ()
 
   override def visit(node: HandleEventNode): Unit =
     node.switchCase.accept(this)
@@ -79,12 +79,12 @@ final class EnumVisitor(out: String => Unit) extends DummyNscVisitor {
 }
 
 final class StatePropertyVisitor(out: String => Unit) extends DummyNscVisitor {
-  override def visit(node: StatePropertyNode): Unit =
+  override def visit(node: StateFieldNode): Unit =
     out(s"state property = ${node.initialState}")
 }
 
 final class EventDelegatorVisitor(out: String => Unit) extends DummyNscVisitor {
-  override def visit(node: EventDelegatorsNode): Unit =
+  override def visit(node: EventDelegatorNode): Unit =
     out(s"delegators ${node.events}")
 }
 
@@ -100,8 +100,8 @@ final class HandleEventVisitor(out: String => Unit) extends DummyNscVisitor {
 final class FsmClassVisitor(out: String => Unit) extends DummyNscVisitor {
   override def visit(node: SwitchCaseNode): Unit = out("sc")
   override def visit(node: EnumNode): Unit = out("e ")
-  override def visit(node: StatePropertyNode): Unit = out("p ")
-  override def visit(node: EventDelegatorsNode): Unit = out("d ")
+  override def visit(node: StateFieldNode): Unit = out("p ")
+  override def visit(node: EventDelegatorNode): Unit = out("d ")
   override def visit(node: HandleEventNode): Unit = out("he ")
   override def visit(node: FsmClassNode): Unit = {
     out(s"class ${node.className} {")
@@ -132,7 +132,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
     withVisitor(new TestVisitor(_))
     assertGenerated(
       singleStateMachine,
-      "s state {case I {s event {case e {setState(State.I) a() } default(I);}}}")
+      "s state {case I {s event {case e {State.Ia() } default(I);}}}")
   }
 
   test("Two transitions works") {
@@ -148,7 +148,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
 
     assertGenerated(
       machine,
-      "s state {case I {s event {case e1 {setState(State.S) a1() } default(I);}}case S {s event {case e2 {setState(State.I) a2() } default(S);}}}"
+      "s state {case I {s event {case e1 {State.Sa1() } default(I);}}case S {s event {case e2 {State.Ia2() } default(S);}}}"
     )
   }
 
@@ -212,7 +212,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
 
     assertGenerated(
       machine,
-      "s state {case S2 {s event {case e {setState(State.S1) a() } default(S2);}}case S1 {s event {case e {setState(State.S2) a() } default(S1);}}}"
+      "s state {case S2 {s event {case e {State.S1a() } default(S2);}}case S1 {s event {case e {State.S2a() } default(S1);}}}"
     )
   }
 
@@ -228,7 +228,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
 
     assertGenerated(
       machine,
-      "s state {case I {s event {case e {setState(State.I) a1() a2() a3() } default(I);}}}"
+      "s state {case I {s event {case e {State.Ia1() a2() a3() } default(I);}}}"
     )
   }
 
@@ -244,7 +244,7 @@ final class SelectionGenerationSuite extends SelectionFactorySuite {
 
     assertGenerated(
       machine,
-      "s state {case A {s event {case e {setState(State.B) a() } default(A);}}}"
+      "s state {case A {s event {case e {State.Ba() } default(A);}}}"
     )
   }
 }

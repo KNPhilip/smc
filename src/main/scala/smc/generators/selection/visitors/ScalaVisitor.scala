@@ -1,6 +1,8 @@
 package smc.generators.selection.visitors
 
 import smc.generators.selection._
+import smc.toPascalCase
+import smc.toCamelCase
 
 import java.io.IOException
 import java.nio.file.{FileSystems, Files}
@@ -10,11 +12,11 @@ final class ScalaVisitor extends SelectionNodeVisitor {
   private var states: List[String] = List.empty
 
   override def visit(node: FsmClassNode): Unit = {
-    output.append(s"abstract class ${node.className} {\n")
-    output.append(s"${indent(1)}def unhandledTransition(state: String, event: String): Unit\n\n")
+    output.append(s"abstract class ${node.className.toPascalCase} {\n")
+    output.append(s"${indent(1)}protected def unhandledTransition(state: String, event: String): Unit\n\n")
 
     node.actions.foreach { action =>
-      output.append(s"${indent(1)}protected def $action(): Unit\n\n")
+      output.append(s"${indent(1)}protected def ${action.toCamelCase}(): Unit\n\n")
     }
 
     states = node.stateEnum.enumerators
@@ -27,19 +29,15 @@ final class ScalaVisitor extends SelectionNodeVisitor {
     output.append("}\n")
   }
 
-  override def visit(node: EventDelegatorsNode): Unit =
+  override def visit(node: EventDelegatorNode): Unit =
     node.events.foreach { event =>
       output.append(
-        s"${indent(1)}def $event(): Unit =\n" +
-        s"${indent(2)}handleEvent(Event.$event)\n\n")
+        s"${indent(1)}def ${event.toCamelCase}(): Unit =\n" +
+        s"${indent(2)}handleEvent(Event.${event.toPascalCase})\n\n")
     }
 
-  override def visit(node: StatePropertyNode): Unit = {
-    output.append(s"${indent(1)}private var state: State = State.${node.initialState}\n\n")
-    output.append(
-      s"${indent(1)}private def setState(s: State): Unit =\n" +
-      s"${indent(2)}state = s\n\n")
-  }
+  override def visit(node: StateFieldNode): Unit =
+    output.append(s"${indent(1)}private var state: State = State.${node.initialState.toPascalCase}\n\n")
 
   override def visit(node: HandleEventNode): Unit = {
     output.append(s"${indent(1)}private def handleEvent(event: Event): Unit = {\n")
@@ -61,15 +59,15 @@ final class ScalaVisitor extends SelectionNodeVisitor {
 
   override def visit(node: CaseNode): Unit = {
     if (states.contains(node.caseName)) {
-      output.append(s"${indent(3)}case State.${node.caseName} =>\n")
+      output.append(s"${indent(3)}case State.${node.caseName.toPascalCase} =>\n")
     } else {
-      output.append(s"${indent(5)}case Event.${node.caseName} =>\n")
+      output.append(s"${indent(5)}case Event.${node.caseName.toPascalCase} =>\n")
     }
     node.caseActionNode.foreach(_.accept(this))
   }
 
   override def visit(node: FunctionCallNode): Unit = {
-    output.append(s"${indent(6)}${node.functionName}(")
+    output.append(s"${indent(6)}${node.functionName.toCamelCase}(")
 
     if (node.argument != null)
       node.argument.foreach(_.accept(this))
@@ -78,17 +76,17 @@ final class ScalaVisitor extends SelectionNodeVisitor {
   }
 
   override def visit(node: NextStateNode): Unit =
-    output.append(s"State.${node.nextState}")
+    output.append(s"${indent(6)}state = State.${node.nextState.toPascalCase}\n")
 
   override def visit(node: DefaultCaseNode): Unit =
     output.append(s"${indent(5)}case _ => unhandledTransition(state.toString, event.toString)\n")
 
   override def visit(node: EnumNode): Unit =
     output.append(
-      s"\n${indent(1)}enum ${node.name}:\n" +
+      s"\n${indent(1)}enum ${node.name.toPascalCase}:\n" +
         s"${indent(2)}case\n" +
         s"${indent(2)}" +
-        s"${node.enumerators.mkString(s",\n${indent(2)}")}\n")
+        s"${node.enumerators.map(_.toPascalCase).mkString(s",\n${indent(2)}")}\n")
 
   @throws[IOException]
   def writeFiles(path: String, fileName: String): Unit = {

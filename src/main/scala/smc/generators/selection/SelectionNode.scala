@@ -4,9 +4,24 @@ sealed trait SelectionNode {
   def accept(visitor: SelectionNodeVisitor): Unit
 }
 
-final case class FsmClassNode(className: String, delegators: EventDelegatorsNode, eventEnum: EnumNode,
-                              stateEnum: EnumNode, stateProperty: StatePropertyNode, handleEvent: HandleEventNode,
+final case class FsmClassNode(className: String, delegators: EventDelegatorNode, eventEnum: EnumNode,
+                              stateEnum: EnumNode, stateProperty: StateFieldNode, handleEvent: HandleEventNode,
                               actions: List[String], states: List[String]) extends SelectionNode {
+  override def accept(visitor: SelectionNodeVisitor): Unit =
+    visitor.visit(this)
+}
+
+final case class EventDelegatorNode(events: List[String]) extends SelectionNode {
+  override def accept(visitor: SelectionNodeVisitor): Unit =
+    visitor.visit(this)
+}
+
+final case class StateFieldNode(initialState: String) extends SelectionNode {
+  override def accept(visitor: SelectionNodeVisitor): Unit =
+    visitor.visit(this)
+}
+
+final case class HandleEventNode(switchCase: SwitchCaseNode) extends SelectionNode {
   override def accept(visitor: SelectionNodeVisitor): Unit =
     visitor.visit(this)
 }
@@ -40,12 +55,9 @@ final case class FunctionCallNode(functionName: String,
     visitor.visit(this)
 }
 
-final case class CompositeNode(nodes: List[SelectionNode] = Nil) extends SelectionNode {
+final case class NextStateNode(nextState: String) extends SelectionNode {
   override def accept(visitor: SelectionNodeVisitor): Unit =
-    nodes.foreach(_.accept(visitor))
-
-  def add(node: SelectionNode): CompositeNode =
-    copy(nodes = nodes :+ node)
+    visitor.visit(this)
 }
 
 final case class EnumNode(name: String, enumerators: List[String]
@@ -54,22 +66,10 @@ final case class EnumNode(name: String, enumerators: List[String]
     visitor.visit(this)
 }
 
-final case class NextStateNode(nextState: String) extends SelectionNode {
+final case class CompositeNode(nodes: List[SelectionNode] = Nil) extends SelectionNode {
   override def accept(visitor: SelectionNodeVisitor): Unit =
-    visitor.visit(this)
-}
+    nodes.foreach(_.accept(visitor))
 
-final case class StatePropertyNode(initialState: String) extends SelectionNode {
-  override def accept(visitor: SelectionNodeVisitor): Unit =
-    visitor.visit(this)
-}
-
-final case class EventDelegatorsNode(events: List[String]) extends SelectionNode {
-  override def accept(visitor: SelectionNodeVisitor): Unit =
-    visitor.visit(this)
-}
-
-final case class HandleEventNode(switchCase: SwitchCaseNode) extends SelectionNode {
-  override def accept(visitor: SelectionNodeVisitor): Unit =
-    visitor.visit(this)
+  def add(node: SelectionNode): CompositeNode =
+    copy(nodes = nodes :+ node)
 }

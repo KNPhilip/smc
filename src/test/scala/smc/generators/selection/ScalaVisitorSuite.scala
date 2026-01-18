@@ -16,40 +16,37 @@ final class ScalaVisitorSuite extends FunSuite {
   test("Scala source code generation of Coffee Machine FSM") {
     assertGenerated(
       sm("CoffeeMachine", "Selecting",
-        states = Seq("Selecting", "Brewing"),
-        events = Seq("ChooseDrink", "Finish"),
-        actions = Seq("dispenseCup"),
+        states = Seq("selecting", "Brewing"),
+        events = Seq("ChooseDrink", "finish"),
+        actions = Seq("DispenseCup"),
         transitions = Seq(
-          transition("Selecting", sub("ChooseDrink", "Brewing")),
-          transition("Brewing", sub("Finish", "Selecting", "dispenseCup")))),
+          transition("selecting", sub("ChooseDrink", "Brewing")),
+          transition("Brewing", sub("finish", "selecting", "DispenseCup")))),
       "abstract class CoffeeMachine {\n" +
-      "  def unhandledTransition(state: String, event: String): Unit\n" +
+      "  protected def unhandledTransition(state: String, event: String): Unit\n" +
       "\n" +
       "  protected def dispenseCup(): Unit\n" +
       "\n" +
-      "  def ChooseDrink(): Unit =\n" +
+      "  def chooseDrink(): Unit =\n" +
       "    handleEvent(Event.ChooseDrink)\n" +
       "\n" +
-      "  def Finish(): Unit =\n" +
+      "  def finish(): Unit =\n" +
       "    handleEvent(Event.Finish)\n" +
       "\n" +
       "  private var state: State = State.Selecting\n" +
-      "\n" +
-      "  private def setState(s: State): Unit =\n" +
-      "    state = s\n" +
       "\n" +
       "  private def handleEvent(event: Event): Unit = {\n" +
       "    state match {\n" +
       "      case State.Selecting =>\n" +
       "        event match {\n" +
       "          case Event.ChooseDrink =>\n" +
-      "            setState(State.Brewing)\n" +
+      "            state = State.Brewing\n" +
       "          case _ => unhandledTransition(state.toString, event.toString)\n" +
       "        }\n" +
       "      case State.Brewing =>\n" +
       "        event match {\n" +
       "          case Event.Finish =>\n" +
-      "            setState(State.Selecting)\n" +
+      "            state = State.Selecting\n" +
       "            dispenseCup()\n" +
       "          case _ => unhandledTransition(state.toString, event.toString)\n" +
       "        }\n" +
