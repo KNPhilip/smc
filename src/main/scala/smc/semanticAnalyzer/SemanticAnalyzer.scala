@@ -17,7 +17,8 @@ enum SemanticError:
   DUPLICATE_TRANSITION,
   UNDEFINED_SUPER_STATE,
   SUPERSTATE_AS_NEXT_STATE,
-  SUPERSTATE_CONFLICT
+  SUPERSTATE_CONFLICT,
+  DUPLICATE_NAME
 
 final class SemanticAnalyzer {
   var errors: ListBuffer[SemanticError] = ListBuffer.empty[SemanticError]
@@ -69,6 +70,7 @@ final class SemanticAnalyzer {
     checkForDuplicateStates(input)
     checkForDuplicateTransitions(input)
     checkForUnusedStates(input, initialState)
+    checkForDuplicateNames(input)
   }
 
   private def checkForUndefinedSuperstate(input: List[State]): Unit = {
@@ -184,5 +186,29 @@ final class SemanticAnalyzer {
 
     if (unused.nonEmpty)
       errors += UNUSED_STATE
+  }
+
+  private def checkForDuplicateNames(states: List[State]): Unit = {
+    // Collect all event names
+    val eventNames: List[String] = states.flatMap(_.events.map(_.name))
+    
+    // Collect all action names (from transitions, entry actions, and exit actions)
+    val transitionActions: List[String] = states.flatMap(_.events.flatMap(_.actions))
+    val entryActions: List[String] = states.flatMap(_.entryActions)
+    val exitActions: List[String] = states.flatMap(_.exitActions)
+    val allActions: List[String] = transitionActions ++ entryActions ++ exitActions
+    
+    // Check for duplicate event names with action names (both become methods)
+    val eventActionConflict = eventNames.toSet.intersect(allActions.toSet)
+    if (eventActionConflict.nonEmpty) {
+      errors += DUPLICATE_NAME
+      return
+    }
+    
+    // Check for duplicate action names
+    if (allActions.toSet.size != allActions.size) {
+      errors += DUPLICATE_NAME
+      return
+    }
   }
 }

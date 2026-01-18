@@ -368,6 +368,171 @@ class SemanticSuperstateSuite extends SemanticSuite {
   }
 }
 
+class SemanticDuplicateNameSuite extends SemanticSuite {
+  override def beforeEach(context: BeforeEach): Unit = {
+    super.beforeEach(context)
+
+    syntax.machines += new StateMachine("Fsm") {
+      initialState = "initial"
+      states += new State("initial")
+    }
+  }
+
+  test("Event name conflicts with transition action name") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("doSomething") {
+        targetState = "initial"
+      }
+      events += new Event("trigger") {
+        targetState = "initial"
+        actions += "doSomething"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Event name conflicts with entry action name") {
+    syntax.machines.last.states += new State("state") {
+      entryActions += "initialize"
+      events += new Event("initialize") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Event name conflicts with exit action name") {
+    syntax.machines.last.states += new State("state") {
+      exitActions += "cleanup"
+      events += new Event("cleanup") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Duplicate action names in different transitions") {
+    syntax.machines.last.states += new State("state1") {
+      events += new Event("event1") {
+        targetState = "initial"
+        actions += "doAction"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      events += new Event("event2") {
+        targetState = "initial"
+        actions += "doAction"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Duplicate entry action names") {
+    syntax.machines.last.states += new State("state1") {
+      entryActions += "setup"
+      events += new Event("event1") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      entryActions += "setup"
+      events += new Event("event2") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Duplicate exit action names") {
+    syntax.machines.last.states += new State("state1") {
+      exitActions += "teardown"
+      events += new Event("event1") {
+        targetState = "initial"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      exitActions += "teardown"
+      events += new Event("event2") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Entry action conflicts with exit action") {
+    syntax.machines.last.states += new State("state") {
+      entryActions += "doSomething"
+      exitActions += "doSomething"
+      events += new Event("event") {
+        targetState = "initial"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("Multiple actions in same transition with same name") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("event") {
+        targetState = "initial"
+        actions += "action1"
+        actions += "action2"
+        actions += "action1"
+      }
+    }
+
+    analyzeSyntax()
+    assertPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("No duplicate names when event and action are different") {
+    syntax.machines.last.states += new State("state") {
+      events += new Event("trigger") {
+        targetState = "initial"
+        actions += "doAction"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(DUPLICATE_NAME)
+  }
+
+  test("No duplicate names when multiple different actions exist") {
+    syntax.machines.last.states += new State("state1") {
+      entryActions += "setup1"
+      exitActions += "teardown1"
+      events += new Event("event1") {
+        targetState = "initial"
+        actions += "action1"
+      }
+    }
+    syntax.machines.last.states += new State("state2") {
+      entryActions += "setup2"
+      exitActions += "teardown2"
+      events += new Event("event2") {
+        targetState = "initial"
+        actions += "action2"
+      }
+    }
+
+    analyzeSyntax()
+    assertNonPresentErrors(DUPLICATE_NAME)
+  }
+}
+
 class SemanticHappyPathSuite extends SemanticSuite {
   private def assertNoErrors(): Unit = {
     assertNonPresentErrors(
@@ -382,7 +547,8 @@ class SemanticHappyPathSuite extends SemanticSuite {
       DUPLICATE_TRANSITION,
       UNDEFINED_SUPER_STATE,
       SUPERSTATE_AS_NEXT_STATE,
-      SUPERSTATE_CONFLICT)
+      SUPERSTATE_CONFLICT,
+      DUPLICATE_NAME)
   }
 
   test("Sample coffee machine FSM is semantically correct") {
