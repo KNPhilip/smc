@@ -56,12 +56,12 @@ final class ScalaVisitorSuite extends FunSuite {
       "    }\n" +
       "  }\n" +
       "\n" +
-      "  private enum State:\n" +
+      "  enum State:\n" +
       "    case\n" +
       "    Selecting,\n" +
       "    Brewing\n" +
       "\n" +
-      "  private enum Event:\n" +
+      "  enum Event:\n" +
       "    case\n" +
       "    ChooseDrink,\n" +
       "    Finish\n" +

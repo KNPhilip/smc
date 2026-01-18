@@ -85,7 +85,7 @@ final class ScalaVisitor extends SelectionNodeVisitor {
 
   override def visit(node: EnumNode): Unit =
     output.append(
-      s"\n${indent(1)}private enum ${node.name}:\n" +
+      s"\n${indent(1)}enum ${node.name}:\n" +
         s"${indent(2)}case\n" +
         s"${indent(2)}" +
         s"${node.enumerators.mkString(s",\n${indent(2)}")}\n")
