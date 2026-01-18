@@ -1,6 +1,7 @@
 package smc.semanticAnalyzer
 
 import scala.collection.mutable.ListBuffer
+import smc.toCamelCase
 import smc.semanticAnalyzer.SemanticError.*
 import smc.syntaxAnalyzer.{StateMachineSyntax, StateMachine, State}
 
@@ -189,8 +190,6 @@ final class SemanticAnalyzer {
   }
 
   private def checkForDuplicateNames(states: List[State]): Unit = {
-    import smc.toCamelCase
-    
     val eventNames: List[String] = states.flatMap(_.events.map(_.name))
     
     val transitionActions: List[String] = states.flatMap(_.events.flatMap(_.actions))
@@ -198,7 +197,6 @@ final class SemanticAnalyzer {
     val exitActions: List[String] = states.flatMap(_.exitActions)
     val allActions: List[String] = transitionActions ++ entryActions ++ exitActions
     
-    // Normalize to camelCase to detect conflicts after code generation
     val normalizedEvents = eventNames.map(_.toCamelCase).toSet
     val normalizedActions = allActions.map(_.toCamelCase).toSet
     
