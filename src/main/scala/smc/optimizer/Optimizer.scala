@@ -23,6 +23,7 @@ final class Optimizer {
 
   private def addActions(machine: StateMachine, optimized: OptimizedStateMachine): Unit = {
     val seenActions = MutableSet.empty[String]
+    
     machine.states.foreach { s =>
       s.entryActions.foreach { action =>
         if (seenActions.add(action))
