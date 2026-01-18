@@ -3,4 +3,3 @@ metals.sbt
 .idea/
 .bsp/
 target/
-sbt/
